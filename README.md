@@ -5,7 +5,7 @@ Last updated: 16/04/2026
 ## BACKGROUND
 This project was originally build by Simona Todorova and Alexander Stoilov as a fun X-mas build-athon project with Arduino Mega2560 to control motors and ESP32 for time and wifi integration. Sofware was managed in Arduino IDE and local folders on PCs, CAD done on SolidWorks and wiring and mechanical install conducted in bedroom curtains in Dec 2024 (Christmas weekend).
 
-This repo is improvemnt building and profecionalising initial 2-day buildathon with following improvements 
+This repo is solo project in April 2026 of improvemnt building upon and profesionalising initial 2-day buildathon with following improvements: 
 - Migration to PlatformIO for proper embedded programming workflow
 - System simplification and streamline to eliminate Arduino and only use ESP32
 
