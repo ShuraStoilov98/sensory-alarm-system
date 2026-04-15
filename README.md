@@ -1,5 +1,14 @@
 # Sensory Alarm System Build
 
+Last updated: 16/04/2026
+
+## BACKGROUND
+This project was originally build by Simona Todorova and Alexander Stoilov as a fun X-mas build-athon project with Arduino Mega2560 to control motors and ESP32 for time and wifi integration. Sofware was managed in Arduino IDE and local folders on PCs, CAD done on SolidWorks and wiring and mechanical install conducted in bedroom curtains in Dec 2024 (Christmas weekend).
+
+This repo is improvemnt building and profecionalising initial 2-day buildathon with following improvements 
+- Migration to PlatformIO for proper embedded programming workflow
+- System simplification and streamline to eliminate Arduino and only use ESP32
+
 ## 📌 Overview
 
 This project implements a **smart curtain automation system** powered by an ESP32.
@@ -169,6 +178,7 @@ KILL_SWITCH_OPENED_PIN = 32
 ## 🔮 Future Ideas
 
 * Mobile app control (via WiFi)
+* Speaker integration for musical experience 
 * OTA firmware updates
 * Light sensor integration (auto open at sunrise)
 * Multi-curtain system
