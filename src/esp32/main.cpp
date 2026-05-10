@@ -10,7 +10,7 @@
 
 // Inputs
 #define BUTTON_PIN 14
-#define DIR_BUTTON 12
+#define DIR_BUTTON 13
 #define KILL_SWITCH_CLOSED_PIN 33
 #define KILL_SWITCH_OPENED_PIN 32
 
@@ -150,6 +150,7 @@ void setup() {
   pinMode(STEP_PIN, OUTPUT);
   pinMode(DIR_PIN, OUTPUT);
   pinMode(ENABLE_PIN, OUTPUT);
+  digitalWrite(ENABLE_PIN, HIGH); // Disable motor driver by default
 
   // Inputs (use pullups for stability)
   pinMode(BUTTON_PIN, INPUT_PULLUP);
