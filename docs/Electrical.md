@@ -9,6 +9,10 @@ The accompanying wiring diagram (`Wiring_diagram.png`) is useful for visual orie
 
 Always follow THIS document as the authoritative reference.
 
+We will be using simple RAG process to enhance model to use specific reference data: 
+
+![Wiring Architecture](Wiring_diagram.png)
+
 ---
 
 # System Overview
