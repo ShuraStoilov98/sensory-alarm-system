@@ -228,7 +228,7 @@ This file is excluded from version control.
 
 * [PlatformIO Core](https://docs.platformio.org/en/latest/core/installation/index.html) (CLI) or the PlatformIO IDE extension for VS Code
 * USB cable connected to the ESP32 DevKit
-* USB-to-serial drivers for your board if not auto-detected (most DevKits use CP2102 or CH340)
+* USB-to-serial drivers for the board if not auto-detected (most DevKits use CP2102 or CH340)
 
 ### 1. Configure secrets
 
