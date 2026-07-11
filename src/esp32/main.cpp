@@ -28,13 +28,13 @@ unsigned long lastSyncMillis = 0;
 constexpr unsigned long syncInterval = 24UL * 60UL * 60UL * 1000UL;  // 24 hours
 
 // Set alarm time (24-hour format)
-int alarmHour = 7;
-int alarmMinute = 0;
+int alarmHour = 6;
+int alarmMinute = 30;
 bool alarmTriggeredToday = false;
 
 // Motor settings
 constexpr int DELAY_BETWEEN_STEPS = 500; // microseconds
-constexpr unsigned long MOTOR_TIMEOUT = 15000; // 15 seconds safety timeout for motor operations
+constexpr unsigned long MOTOR_TIMEOUT = 5000; // 5 seconds safety timeout for motor operations
 
 // Function to step the motor
 void stepMotor() {
@@ -79,7 +79,8 @@ void openCurtain() {
 
     // Safety timeout to prevent motor from running indefinitely
     if (millis() - start > MOTOR_TIMEOUT) {
-      Serial.println("ERROR: open timeout");
+      Serial.printf("ERROR: open timeout (KILL_SWITCH_OPENED_PIN %d raw state = %d, needs LOW to stop)\n",
+                    KILL_SWITCH_OPENED_PIN, digitalRead(KILL_SWITCH_OPENED_PIN));
       break;
     }
   }
@@ -101,7 +102,8 @@ void closeCurtain() {
 
     // Safety timeout to prevent motor from running indefinitely
     if (millis() - start > MOTOR_TIMEOUT) {
-      Serial.println("ERROR: close timeout");
+      Serial.printf("ERROR: close timeout (KILL_SWITCH_CLOSED_PIN %d raw state = %d, needs LOW to stop)\n",
+                    KILL_SWITCH_CLOSED_PIN, digitalRead(KILL_SWITCH_CLOSED_PIN));
       break;
     }
   }

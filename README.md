@@ -47,7 +47,7 @@ ENABLE_PIN = 27
 
 // Inputs
 BUTTON_PIN = 14
-DIR_BUTTON = 12
+DIR_BUTTON = 13
 KILL_SWITCH_CLOSED_PIN = 33
 KILL_SWITCH_OPENED_PIN = 32
 ```
@@ -219,6 +219,73 @@ Example:
 ```
 
 This file is excluded from version control.
+
+---
+
+## 🚀 Deploy to Device (Build & Flash)
+
+### Prerequisites
+
+* [PlatformIO Core](https://docs.platformio.org/en/latest/core/installation/index.html) (CLI) or the PlatformIO IDE extension for VS Code
+* USB cable connected to the ESP32 DevKit
+* USB-to-serial drivers for your board if not auto-detected (most DevKits use CP2102 or CH340)
+
+### 1. Configure secrets
+
+```bash
+cp include/secrets.example.h include/secrets.h
+```
+
+Edit `include/secrets.h` and fill in your WiFi credentials:
+
+```cpp
+#define WIFI_SSID "your_wifi"
+#define WIFI_PASSWORD "your_password"
+```
+
+### 2. Build
+
+```bash
+pio run
+```
+
+Compiles the firmware and reports flash/RAM usage. Fix any errors here before proceeding — this step does not touch the device.
+
+### 3. Identify the serial port (if upload doesn't auto-detect)
+
+```bash
+pio device list
+```
+
+Look for the ESP32's COM port (Windows) or `/dev/ttyUSB*` / `/dev/cu.*` (Linux/macOS).
+
+### 4. Flash
+
+```bash
+pio run --target upload
+```
+
+If upload fails to connect, hold the **BOOT** button on the ESP32 while the upload starts (some boards need this to enter flash mode), and release once "Connecting..." completes.
+
+### 5. Monitor serial output
+
+```bash
+pio device monitor
+```
+
+Runs at `115200` baud (matches `Serial.begin(115200)` in [main.cpp](src/esp32/main.cpp) and `monitor_speed` in [platformio.ini](platformio.ini)). Use this to watch WiFi connection, NTP sync, alarm triggers, and the motor timeout diagnostics.
+
+Build, flash, and monitor in one step:
+
+```bash
+pio run --target upload --target monitor
+```
+
+### Before powering the motor
+
+* Flash and verify Serial output first with the 9V motor supply **disconnected** — `ENABLE_PIN` defaults `HIGH` (driver disabled) at boot, but confirm WiFi/NTP/button logic behaves as expected before introducing motor movement.
+* Double-check `VMOT` polarity on the DRV8825 before connecting the 9V supply — reversed polarity destroys the driver (see [docs/Wiring_diagram.png](docs/Wiring_diagram.png) safety notes).
+* Keep the Serial Monitor open during the first motorized test run so timeout/limit-switch diagnostics are visible immediately.
 
 ---
 
