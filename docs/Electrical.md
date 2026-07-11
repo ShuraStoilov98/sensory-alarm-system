@@ -9,6 +9,9 @@ The accompanying wiring diagram (`Wiring_diagram.png`) is useful for visual orie
 
 Always follow THIS document as the authoritative reference.
 
+
+![Wiring Architecture](Wiring_diagram.png)
+
 ---
 
 # System Overview
