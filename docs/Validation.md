@@ -15,9 +15,9 @@ Validated on 8 October 2026 with placeholder WiFi credentials:
 | ESP32 toolchain | 8.4.0+2021r2-patch5 |
 | Upload tool | esptool 4.11.0, package 2.41100.260830 |
 | Target | `esp32dev`, release build |
-| Firmware behavior tests | 18 host scenarios passed |
-| RAM | 45,076 / 327,680 bytes, 13.8% |
-| Flash | 751,553 / 1,310,720 bytes, 57.3% |
+| Firmware behavior tests | 22 host scenarios passed |
+| RAM | 45,084 / 327,680 bytes, 13.8% |
+| Flash | 751,825 / 1,310,720 bytes, 57.4% |
 | Device upload or bench run | Not performed |
 | Hosted GitHub Actions run | Pending push; workflow added, commands verified locally |
 

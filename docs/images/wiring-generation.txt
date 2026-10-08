@@ -1,0 +1,45 @@
+Wiring illustration regeneration
+
+Tool: built-in imagegen.
+Style reference: docs/Wiring_diagram.png at original commit 1294ec4.
+Electrical reference: docs/Electrical.md and src/esp32/config.h.
+The illustration defines logical nets. Component renders do not specify physical pin positions.
+Intermediate generated drafts were visually checked and corrected before selecting the final image.
+Hardware acceptance remains pending.
+
+Initial generation specification:
+
+Use case: infographic-diagram
+Asset type: professional GitHub README wiring illustration for a real curtain alarm prototype.
+Primary request: regenerate the reference's polished white-background electronics infographic, with realistic ESP32 DevKit, purple DRV8825 carrier/heatsink, four tactile/limit switches, NEMA17 motor, USB charger and 9V supply, thin colored orthogonal wires, excellent typography. Preserve its professional visual character, but rebuild the wiring correctly. Wide landscape high resolution, readable concise labels.
+Input image 1 is STYLE reference only, containing electrical errors that MUST NOT be copied.
+Title exactly "SMART SENSORY ALARM — WIRING"
+Subtitle exactly "ESP32 · DRV8825 · NEMA17 | Logical connections — verify your carrier pinout"
+Use component illustrations with clearly labeled functional terminal rails beside them. Wires attach to labeled functional terminals, not invented physical GPIO pads. Do not print a fake physical DevKit pinout. No unnecessary pins.
+Exact electrical nets, every route visible:
+ESP32 GPIO25 -> DRV8825 STEP (blue).
+ESP32 GPIO26 -> DRV8825 DIR (blue).
+ESP32 GPIO27 -> DRV8825 ENABLE (purple), labeled "LOW = enabled".
+ESP32 3V3 -> both DRV8825 RESET and SLEEP (red/orange 3.3V net distinct from motor9V).
+DRV8825 M0, M1, M2 unconnected, labeled "Full step: leave M0/M1/M2 open".
+DRV8825 FAULT unconnected; label "FAULT unused". There is NO VDD input on DRV8825; never draw VDD.
+Separate motor supply +9V red line -> VMOT. Supply negative -> common GND.
+100µF capacitor rated ≥25V directly across VMOT and GND, clear "+" to VMOT and "-" to GND.
+Common black GND bus connects ESP32 GND, DRV8825 GND, motor supply negative, and all four switch return contacts.
+ESP32 receives 5V via USB cable only, charger plugs to ESP32 USB. No 9V-to-ESP32 or 5V-to-driver wiring.
+Four two-terminal normally-open contacts: manual run button GPIO14 to GND; direction switch GPIO13 to GND; opened limit GPIO32 to GND; closed limit GPIO33 to GND. EACH switch's signal end connects its GPIO, opposite end connects GND, never short GPIO directly to ground beside switch. Label "INPUT_PULLUP: open HIGH, closed LOW". Label manual "Hold to run; release to stop". Direction "HIGH opens · LOW closes".
+DRV8825 A1/A2 -> two ends of motor coil A; B1/B2 -> two ends of separate motor coil B. Show two independent coil symbols clearly and realistic motor nearby. Never imply motor wire colors identify coil pairs. Label "Identify coil pairs with a meter".
+Bottom compact ESP32 GPIO table with exact seven GPIO assignments above. Bottom notes: "Set driver current limit for your motor and carrier." "Never connect or disconnect the motor under power." "Diagram is logical; check board labels before wiring."
+Avoid overcrowding, crossing ambiguous wires, unsupported 2A recommendation, physical pin-order claims, any VDD pin, fake provenance or 'verified hardware' claims. Ensure the 9V positive visibly reaches VMOT and RESET/SLEEP visibly reach 3V3.
+
+Final editing prompt (applied to the corrected intermediate illustration):
+
+Fix ONLY the top-right power supply panel and its two connections to the driver. Preserve the entire rest of this infographic, its polished visual style, component illustrations, title, correct GPIO wiring, switches, motor coil nets, tables, notes and footer.
+The present power-panel traces incorrectly cross and short capacitor positive to ground. REMOVE EVERY electrical wire and junction dot INSIDE the 9V Motor Power Supply panel. Keep the barrel-adapter and capacitor illustrations as decorative component photos only, with no wires attached to them. Define power connections with this exact three-line net table inside the panel:
+"Supply +9V → VMOT and capacitor +"
+"Supply − → common GND and capacitor −"
+"100µF ≥25V · place close to driver"
+Use readable black type, with plus red and minus black. No diagram wires inside this panel, no intersections, no junctions. Adjust illustration sizes to fit the table cleanly.
+Outside this panel, DRV8825 VMOT gets ONLY a short red terminal stub with the net tag "+9V". DRV8825 GND gets ONLY a short black terminal stub with net tag "GND (common)". Neither stub extends into the power panel. Matching named nets specify the connections, as already done for the motor outputs and input switches.
+Keep driver RESET/SLEEP tied to ESP32 3V3, all control GPIO lines, driver ground symbol, ESP32 common ground symbol, motor coils, and correct notes unchanged.
+In the bottom wire legend change the orange entry text from "3.3V (ESP32)" to "Logic terminal leads" so the color legend matches the pictured orange terminal segments. No new traces anywhere. Return the complete professional infographic.

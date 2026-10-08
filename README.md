@@ -2,7 +2,9 @@
 
 An ESP32 alarm that opens bedroom curtains with a stepper motor and a printed mechanism. A physical direction switch and hold-to-run button provide manual control; end stops and a five-second timeout bound each movement.
 
-![Connection overview for the ESP32, switches, driver and motor](docs/images/connections.svg)
+![ESP32 curtain alarm wiring: switches, DRV8825, motor and separate power supplies](docs/Wiring_diagram.png)
+
+*Regenerated wiring illustration. Follow the [connection tables](docs/Electrical.md) and check your carrier labels before assembly.*
 
 [Wiring](docs/Electrical.md) · [Printable parts](docs/Mechanical.md) · [Hardware checks](docs/Validation.md) · [Public readiness](docs/public_readiness_report.md)
 
@@ -41,7 +43,20 @@ flowchart LR
 - **Motor:** STEP pulses are generated cooperatively, with 500µs minimum high/low intervals. No catch-up pulse bursts are emitted. WiFi reconnect requests and flash writes are deferred during travel.
 - **Faults:** a five-second timeout or both limit switches active disables the driver and latches a fault until restart. Inspect the wiring and mechanism before restarting. A button held during boot must first be released.
 
-The alarm time, GPIO assignments, timezone rules, and motor settings live at the top of [main.cpp](src/esp32/main.cpp). Persisted attempt dates are independent of the compiled alarm setting; reflashing or rebooting is not a routine way to re-run today's alarm.
+The alarm time, GPIO assignments, timezone rules, and motor settings live in [config.h](src/esp32/config.h). Persisted attempt dates are independent of the compiled alarm setting; reflashing or rebooting is not a routine way to re-run today's alarm.
+
+## Firmware structure
+
+| File | Responsibility |
+| --- | --- |
+| [main.cpp](src/esp32/main.cpp) | Startup and cooperative loop |
+| [config.h](src/esp32/config.h) | Pins, schedule, timezone and timing |
+| [curtain_controller.cpp](src/esp32/curtain_controller.cpp) | State-aware command guards, limit checks, faults and step edges |
+| [manual_input.cpp](src/esp32/manual_input.cpp) | Debounced hold-to-run input and physical override |
+| [alarm_scheduler.cpp](src/esp32/alarm_scheduler.cpp) | Daily schedule and persistent attempt tracking |
+| [network_clock.cpp](src/esp32/network_clock.cpp) | Idle WiFi recovery and SNTP startup |
+
+The controller reports motion, limit-derived position, command source and fault cause separately. With neither end stop active, position is **unknown**. Busy requests cannot reverse an active movement; stop preserves latched faults. Manual input and the alarm share the same guarded command API. See the [state transitions](docs/improvements_brief.md#controller-state).
 
 ## Build and flash
 
@@ -82,7 +97,7 @@ Record physical results in [Validation.md](docs/Validation.md), including the ac
 
 End stops are polled by firmware and are not an independent hardware emergency stop. An unplugged switch reads inactive with the current pull-up wiring; there is no obstruction sensing. Driver disable at boot depends on software until the ESP32 configures the GPIO. Mechanical loads and restart behavior need physical validation.
 
-Software-generated step timing can vary with ESP32 background work. Acceleration, editable/persistent alarm settings, a web interface, and OTA updates are not implemented. The [improvements brief](docs/improvements_brief.md) describes future extensions. The firmware intentionally remains a small single-file project.
+Software-generated step timing can vary with ESP32 background work. Acceleration, editable/persistent alarm settings, a web interface, and OTA updates are not implemented. The [improvements brief](docs/improvements_brief.md) describes future extensions. The firmware is split into focused modules, with [main.cpp](src/esp32/main.cpp) coordinating input, movement, network recovery and scheduling.
 
 The compile-tested PlatformIO baseline uses Arduino 2.0.17 / ESP-IDF 4.4.7. ESP-IDF 4.4 is [past vendor support](https://github.com/espressif/esp-idf/releases/tag/v4.4.8); a supported SDK migration remains necessary before treating this legacy prototype as maintained network-connected firmware.
 

@@ -4,11 +4,18 @@
 #include <cstring>
 #include <initializer_list>
 
-// Run the actual firmware with fake GPIO, WiFi, NVS and a controllable clock.
+// Production modules are compiled separately with fake GPIO, WiFi, NVS and time.
 // libc localtime/mktime remain real so timezone rules are exercised too.
-#define time firmwareTestTime
-#include "../../src/esp32/main.cpp"
-#undef time
+#include "../../src/esp32/config.h"
+#include "../../src/esp32/curtain_controller.h"
+#include "../../src/esp32/alarm_scheduler.h"
+#include <WiFi.h>
+
+using namespace Config;
+extern CurtainController controller;
+extern AlarmScheduler alarmScheduler;
+void setup();
+void loop();
 
 void tick(uint32_t ms) {
   testClockUs += uint64_t(ms) * 1000;
@@ -56,7 +63,7 @@ void alarm(int day = 8, int second = 0) {
 }
 
 void stopped() {
-  assert(!isMoving());
+  assert(!controller.isMoving());
   assert(testPins[ENABLE_PIN] == HIGH);
   assert(testPins[STEP_PIN] == LOW);
 }
@@ -64,7 +71,7 @@ void stopped() {
 void offlineManual() {
   boot();
   press();
-  assert(motorState == MotorState::OPENING);
+  assert(controller.status().motion == MotorState::OPENING);
   tick(1);
   assert(testRisingSteps > 0);
   release();
@@ -86,7 +93,7 @@ void bootHeld() {
   stopped();
   release();
   press();
-  assert(isMoving());
+  assert(controller.isMoving());
 }
 
 void bounceAndRelease() {
@@ -101,7 +108,7 @@ void bounceAndRelease() {
   tick(20);
   stopped();
   tick(11);
-  assert(isMoving());
+  assert(controller.isMoving());
   testPins[BUTTON_PIN] = HIGH;
   tick(1); // Release stops without waiting 30 ms.
   stopped();
@@ -114,13 +121,13 @@ void bounceAndRelease() {
 void manualAfterAlarm() {
   boot();
   alarm();
-  assert(motorState == MotorState::OPENING);
+  assert(controller.status().motion == MotorState::OPENING);
   assert(testSavedDate == 20261008 && testStorageWrites == 1);
   testPins[KILL_SWITCH_OPENED_PIN] = LOW;
   tick(1);
   stopped();
   press(false);
-  assert(motorState == MotorState::CLOSING);
+  assert(controller.status().motion == MotorState::CLOSING);
   release();
   stopped();
   assert(testStorageWrites == 1);
@@ -129,7 +136,7 @@ void manualAfterAlarm() {
 void fullMinuteAndNextDate() {
   boot();
   alarm(8, 58);
-  assert(isMoving()); // The old first-five-seconds restriction is gone.
+  assert(controller.isMoving()); // The old first-five-seconds restriction is gone.
   testPins[KILL_SWITCH_OPENED_PIN] = LOW;
   tick(1);
   testPins[KILL_SWITCH_OPENED_PIN] = HIGH;
@@ -137,7 +144,7 @@ void fullMinuteAndNextDate() {
   stopped();
   assert(testStorageWrites == 1);
   alarm(9);
-  assert(isMoving());
+  assert(controller.isMoving());
   assert(testSavedDate == 20261009 && testStorageWrites == 2);
 }
 
@@ -157,14 +164,14 @@ void timeoutLatch() {
   boot();
   press();
   tick(5000);
-  assert(motorState == MotorState::FAULT);
+  assert(controller.status().motion == MotorState::FAULT);
   stopped();
   unsigned pulses = testRisingSteps;
   tick(1000);
   release();
   press(false);
   alarm();
-  assert(motorState == MotorState::FAULT);
+  assert(controller.status().motion == MotorState::FAULT);
   stopped();
   assert(testRisingSteps == pulses);
 }
@@ -174,7 +181,7 @@ void contradictoryLimits() {
   testPins[KILL_SWITCH_OPENED_PIN] = LOW;
   testPins[KILL_SWITCH_CLOSED_PIN] = LOW;
   press();
-  assert(motorState == MotorState::FAULT);
+  assert(controller.status().motion == MotorState::FAULT);
   stopped();
   assert(testRisingSteps == 0);
 }
@@ -187,7 +194,7 @@ void destinationAndDirection() {
   assert(testRisingSteps == 0);
   release();
   press(false); // Travel away from an active opposite limit is allowed.
-  assert(motorState == MotorState::CLOSING);
+  assert(controller.status().motion == MotorState::CLOSING);
   testPins[DIR_BUTTON] = HIGH;
   tick(1);
   stopped();
@@ -205,14 +212,14 @@ void automaticOverride() {
   stopped();
   release();
   press(false);
-  assert(motorState == MotorState::CLOSING);
+  assert(controller.status().motion == MotorState::CLOSING);
 }
 
 void manualSuppressesAlarm() {
   boot();
   press(false);
   alarm();
-  assert(motorState == MotorState::CLOSING);
+  assert(controller.status().motion == MotorState::CLOSING);
   assert(testStorageWrites == 0); // No flash write while moving.
   release();
   tick(251);
@@ -231,7 +238,7 @@ void persistenceFailure() {
   tick(251);
   stopped(); // No retry of today's failed attempt.
   press();
-  assert(isMoving()); // Manual control does not require NVS.
+  assert(controller.isMoving()); // Manual control does not require NVS.
 }
 
 void briefManualOverride() {
@@ -242,7 +249,7 @@ void briefManualOverride() {
   stopped();
   tick(251);
   stopped(); // A complete press/release between clock polls still suppresses auto.
-  assert(lastAlarmDate == 20261008);
+  assert(alarmScheduler.lastHandledDate() == 20261008);
 }
 
 void missingStorage() {
@@ -251,22 +258,20 @@ void missingStorage() {
   alarm();
   stopped();
   press();
-  assert(isMoving());
+  assert(controller.isMoving());
 }
 
 void microsRolloverAndNoBurst() {
   boot();
   testClockUs = uint64_t(UINT32_MAX) - 400;
-  press();
-  lastStepUs = UINT32_MAX - 400;
+  testPins[BUTTON_PIN] = LOW;
+  assert(controller.request(Direction::OPEN, ControlSource::MANUAL) == CommandResult::STARTED);
   testClockUs = uint64_t(UINT32_MAX) + 200;
-  // Reset the movement's milliseconds to isolate micros rollover.
-  movementStartedMs = millis();
-  updateMotor();
+  controller.update();
   assert(testRisingSteps == 1);
   testClockUs += 50000;
-  updateMotor();
-  updateMotor();
+  controller.update();
+  controller.update();
   assert(testRisingSteps == 1); // One falling edge, no catch-up burst.
 }
 
@@ -275,9 +280,9 @@ void millisRollover() {
   testClockUs = (uint64_t(UINT32_MAX) - 100) * 1000;
   press();
   tick(4999);
-  assert(isMoving());
+  assert(controller.isMoving());
   tick(1);
-  assert(motorState == MotorState::FAULT);
+  assert(controller.status().motion == MotorState::FAULT);
   stopped();
 }
 
@@ -302,6 +307,80 @@ void noLateCatchup() {
   assert(testStorageWrites == 0);
 }
 
+void positionAndSource() {
+  boot();
+  auto status = controller.status();
+  assert(status.motion == MotorState::IDLE);
+  assert(status.position == CurtainPosition::UNKNOWN);
+  assert(status.source == ControlSource::NONE);
+  assert(status.fault == FaultReason::NONE);
+  testPins[KILL_SWITCH_CLOSED_PIN] = LOW;
+  assert(controller.status().position == CurtainPosition::CLOSED);
+  press();
+  assert(controller.status().source == ControlSource::MANUAL);
+  testPins[KILL_SWITCH_CLOSED_PIN] = HIGH;
+  tick(1);
+  assert(controller.status().position == CurtainPosition::UNKNOWN);
+  release();
+  assert(controller.status().position == CurtainPosition::UNKNOWN);
+  assert(controller.status().source == ControlSource::NONE);
+  tick(251); // Consume earlier manual activity before the scheduled minute.
+  alarm();
+  assert(controller.status().source == ControlSource::ALARM);
+  testPins[KILL_SWITCH_OPENED_PIN] = LOW;
+  tick(1);
+  assert(controller.status().position == CurtainPosition::OPEN);
+  assert(controller.status().source == ControlSource::NONE);
+}
+
+void busyCommandDoesNotReverse() {
+  boot();
+  press();
+  const unsigned pulses = testRisingSteps;
+  assert(controller.request(Direction::CLOSE, ControlSource::ALARM) == CommandResult::BUSY);
+  assert(controller.request(Direction::OPEN, ControlSource::MANUAL) == CommandResult::BUSY);
+  assert(controller.status().motion == MotorState::OPENING);
+  assert(controller.status().source == ControlSource::MANUAL);
+  assert(testPins[DIR_PIN] == HIGH);
+  assert(testPins[ENABLE_PIN] == LOW);
+  assert(testRisingSteps == pulses);
+}
+
+void stopPreservesFault() {
+  boot();
+  press();
+  tick(MOTOR_TIMEOUT_MS);
+  assert(controller.status().fault == FaultReason::TRAVEL_TIMEOUT);
+  controller.stop("Explicit stop");
+  assert(controller.status().motion == MotorState::FAULT);
+  assert(controller.status().fault == FaultReason::TRAVEL_TIMEOUT);
+  assert(controller.status().source == ControlSource::NONE);
+  assert(controller.request(Direction::CLOSE, ControlSource::ALARM) == CommandResult::FAULT_LATCHED);
+  stopped();
+}
+
+void commandGuards() {
+  boot();
+  assert(controller.request(Direction::OPEN, ControlSource::NONE) == CommandResult::INVALID_SOURCE);
+  assert(controller.request(Direction::OPEN, ControlSource::MANUAL) == CommandResult::MANUAL_OVERRIDE);
+  testPins[BUTTON_PIN] = LOW;
+  assert(controller.request(Direction::OPEN, ControlSource::ALARM) == CommandResult::MANUAL_OVERRIDE);
+  assert(controller.request(Direction::CLOSE, ControlSource::MANUAL) == CommandResult::MANUAL_OVERRIDE);
+  testPins[KILL_SWITCH_OPENED_PIN] = LOW;
+  assert(controller.request(Direction::OPEN, ControlSource::MANUAL) == CommandResult::ALREADY_AT_TARGET);
+  assert(controller.status().position == CurtainPosition::OPEN);
+  testPins[KILL_SWITCH_CLOSED_PIN] = LOW;
+  assert(controller.status().position == CurtainPosition::CONFLICT);
+  assert(controller.request(Direction::CLOSE, ControlSource::ALARM) == CommandResult::FAULT_LATCHED);
+  assert(controller.status().fault == FaultReason::CONTRADICTORY_LIMITS);
+  testPins[KILL_SWITCH_OPENED_PIN] = HIGH;
+  testPins[KILL_SWITCH_CLOSED_PIN] = HIGH;
+  controller.update();
+  assert(controller.status().motion == MotorState::FAULT);
+  assert(controller.status().position == CurtainPosition::UNKNOWN);
+  stopped();
+}
+
 int main(int argc, char** argv) {
   assert(argc == 2);
   struct Scenario { const char* name; void (*run)(); };
@@ -324,6 +403,10 @@ int main(int argc, char** argv) {
     {"millis_rollover_timeout", millisRollover},
     {"winter_and_summer_timezone", seasonalTime},
     {"no_late_alarm_catchup", noLateCatchup},
+    {"position_and_control_source", positionAndSource},
+    {"busy_command_does_not_reverse", busyCommandDoesNotReverse},
+    {"stop_preserves_fault", stopPreservesFault},
+    {"state_aware_command_guards", commandGuards},
   };
   for (const auto& scenario : scenarios) {
     if (std::strcmp(argv[1], scenario.name) == 0) {

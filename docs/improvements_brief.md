@@ -1,14 +1,16 @@
 # Improvements brief
 
-Updated 8 October 2026. This brief distinguishes implemented behavior from proposed extensions. See [main.cpp](../src/esp32/main.cpp), the [wiring reference](Electrical.md), [printable parts](Mechanical.md), and [hardware validation](Validation.md).
+Updated 8 October 2026. This brief distinguishes implemented behavior from proposed extensions. See the [entry point](../src/esp32/main.cpp) and [configuration](../src/esp32/config.h), the [wiring reference](Electrical.md), [printable parts](Mechanical.md), and [hardware validation](Validation.md).
 
 ## Implemented
 
 The project migrated from Arduino IDE/local folders to PlatformIO and from an Arduino Mega plus ESP32 to an ESP32 alone.
 
-The public-readiness pass keeps the small single-file structure while adding:
+The public-readiness pass adds:
 
+- Focused modules for control, physical input, alarm persistence and network/time recovery.
 - Cooperative `micros()`-based stepping with IDLE, OPENING, CLOSING and FAULT states.
+- A shared guarded command API and separate motion, limit-derived position, control-source and fault status.
 - Hold-to-run manual input with debounced starts and release-to-stop.
 - Manual interruption of automatic movement and direction-change stop behavior.
 - Latched timeout and contradictory-limit faults.
@@ -33,6 +35,29 @@ flowchart TD
 
 No WiFi connection wait or whole-travel motor loop blocks the application. Background SDK work and short flash operations still take time. Network reconfiguration and flash writes are deferred during movement; software pulse timing remains subject to hardware validation.
 
+## Controller state
+
+[Controller API](../src/esp32/curtain_controller.h) exposes `request(direction, source)`, `stop(reason)` and a read-only `status()` snapshot. Internal state and pulse timers are private. Requests return a result: started, busy, fault latched, already at target, manual override, or invalid source. Rejected requests preserve the current movement; contradictory limits latch a fault immediately.
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> OPENING: accepted open request
+    IDLE --> CLOSING: accepted close request
+    OPENING --> IDLE: open limit / stop / manual release or direction change
+    CLOSING --> IDLE: closed limit / stop / manual release or direction change
+    OPENING --> FAULT: timeout / contradictory limits
+    CLOSING --> FAULT: timeout / contradictory limits
+    IDLE --> FAULT: contradictory limits
+    FAULT --> FAULT: all commands blocked; stop preserves fault
+```
+
+Fault recovery requires inspection and device restart; there is no software fault-clear command. A raw button press stops alarm-driven travel. A released button and new debounced press are required to start manual travel after that interruption.
+
+Position is `OPEN` or `CLOSED` only while the corresponding end stop is active, `UNKNOWN` when neither is active, and `CONFLICT` when both are active. There is no encoder, homing sequence or remembered position estimate. Source is `MANUAL` or `ALARM` during travel and `NONE` after stopping. A consumed alarm date records an attempt, never a confirmed position.
+
+All firmware modules remain under `src/esp32/`, covered by the existing PlatformIO source filter. Host tests compile those translation units separately and exercise the actual command API.
+
 ## Proposed extensions
 
 | Extension | Status and prerequisite |
@@ -40,7 +65,6 @@ No WiFi connection wait or whole-travel motor loop blocks the application. Backg
 | Acceleration and hardware-timed stepping | Not implemented. Measure travel and step timing before changing the drive profile. |
 | Supported SDK migration | Not implemented. The compile-tested PlatformIO Arduino 2.x environment uses an end-of-life ESP-IDF 4.4.7 baseline; validate a supported stack before maintained network deployment. |
 | Editable alarm settings in NVS | Not implemented. Only the last handled alarm date is persisted; the hour/minute remain compiled settings. |
-| Module split | Optional as complexity grows. If files move outside `src/esp32/`, update `build_src_filter` accordingly. |
 | Local web interface | Not implemented. Route authenticated open/close/stop commands through the same motor/fault logic. |
 | OTA firmware updates | Not implemented. Require authenticated updates and a tested recovery strategy. |
 | Light sensor, speaker, multiple curtains or voice integration | Ideas only; each needs its own hardware and behavior validation. |

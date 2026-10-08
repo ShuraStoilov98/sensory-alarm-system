@@ -4,11 +4,13 @@ Baseline reviewed on 8 October 2026 at commit `1294ec4`. Scope: the local checko
 
 **Baseline verdict: a credible personal hardware prototype, but not yet a polished portfolio reference.** The ESP32 firmware, printable parts, and history of simplifying a working Arduino/ESP32 build demonstrate useful engineering work. The main gaps are hidden privacy metadata, incorrect wiring guidance, several control-flow defects, and a README that makes the physical result difficult to see. No real credentials, API tokens, or private keys were found within the inspected scope.
 
-The baseline findings below describe the original commit. Links to the original files use that commit so their line references remain meaningful. Subsequent implementation is summarized above; Git history and repository visibility remain unchanged.
+The baseline findings below describe the original commit. Links to the original files use that commit so their line references remain meaningful. Subsequent implementation is summarized in the next section; Git history and repository visibility remain unchanged.
 
 ## Status after implementation
 
-The software and documentation changes for a public prototype release are implemented. The single-file firmware and original Git history remain. **Hardware acceptance, real installation media, historical privacy choices and the legacy SDK decision remain with the owner.** See the [validation and publication checklist](Validation.md).
+The software and documentation changes for a public prototype release are implemented. The firmware is now split into focused modules with a shared state-aware controller; original Git history remains. **Hardware acceptance, real installation media, historical privacy choices and the legacy SDK decision remain with the owner.** See the [validation and publication checklist](Validation.md).
+
+**Current verdict: ready to present as documented prototype source once the owner accepts historical privacy exposure and confirms publication rights.** The revised firmware is compile-tested, not yet hardware-validated. A supported SDK and physical acceptance are required before describing it as maintained, reliable network-connected hardware. No repository visibility change or push has been performed in this pass.
 
 | Original finding | Resolution |
 | --- | --- |
@@ -17,17 +19,18 @@ The software and documentation changes for a public prototype release are implem
 | Blocking travel and repeated timeout runs | Cooperative stepping, hold-to-run/release-to-stop, manual override, direction-change stop and latched faults. |
 | Five-second scheduling window and daily reset | Full scheduled minute; monotonic date record, persisted before an automatic attempt. |
 | Summer-only timezone | Bulgarian winter/summer timezone rules, exercised in host tests. |
-| Incorrect wiring/image claims | Corrected logical connection tables and authored SVG overview replace the misleading raster image. Physical carrier identity remains pending. |
+| Incorrect wiring/image claims | The professional raster illustration is regenerated and restored prominently, with corrected logical wiring tables and an editable SVG overview. Physical carrier identity and bench verification remain pending. |
 | Buried mechanical artifacts and repetitive README | Concise README, original CAD previews, inline Mermaid, prominent documentation/download links and a mechanical reference. |
 | Personal source paths in current CAD | Removed only `source_file` values from two archives; all other entry contents, including geometry, preserved. Historical copies remain. |
-| Unpinned build and absent tests | Platform/framework pinned; 18 host scenarios pass and the ESP32 release build succeeds. CI workflow added but not yet run on GitHub. |
+| Unpinned build and absent tests | Platform/framework pinned; 22 host scenarios pass and the ESP32 release build succeeds. CI workflow added but not yet run on GitHub. |
+| Single-file architecture and implicit position/source | Focused controller/input/alarm/network modules; private state, explicit request outcomes and separate motion/position/source/fault snapshots. Stop cannot clear a fault. |
 | Future roadmap presented alongside current behavior | Brief rewritten to separate implemented functionality from optional extensions. |
 
 A deferred skipped-alarm date can be lost if power fails before the motor stops and the flash write completes. Automatic movement always requires persistence first. A saved date far in the future suppresses subsequent earlier dates. Both behaviors are described in the validation checklist.
 
 The successful build uses Arduino core 2.0.17 and ESP-IDF 4.4.7. The vendor states that the 4.4 branch [reached end of life in July 2024](https://github.com/espressif/esp-idf/releases/tag/v4.4.8). The current pin therefore establishes an explicit legacy baseline, rather than current SDK security coverage. Publishing it as a documented legacy prototype or migrating to a supported stack is an owner decision; dependency CVE applicability has not been exhaustively assessed. The dependencies and acceptance boundaries are recorded in [Validation.md](Validation.md).
 
-A post-change scan with `detect-secrets` 1.5.0 found no credential candidates in the current checkout or reachable historical file contents, including decompressed CAD text. A separate path check confirms the current CAD archives no longer contain user source paths. The original personal email and CAD paths remain in history by design. Local documentation links and SVG syntax also pass checks.
+A post-change scan with `detect-secrets` 1.5.0 found no credential candidates in the current checkout or reachable historical file contents, including decompressed CAD text. The latest history scan covered 18 reachable commits, 51 file blobs and 39 decompressed archive text entries, including the earlier readiness commit `a64f5a2`. A separate path check confirms the current CAD archives no longer contain user source paths, and comparison with `1294ec4` confirms only the metadata entry changed in each affected archive. The original personal email and CAD paths remain in history by design. Local documentation links and SVG syntax also pass checks. The latest refactor compiles at 45,084 bytes RAM (13.8%) and 751,825 bytes flash (57.4%), using placeholder credentials only.
 
 ## Original review
 
@@ -107,7 +110,7 @@ Pattern checks covered WiFi and password assignments, quoted JSON secret fields,
 
 There is no confirmed credential leak that warrants rotation from these results. Privacy metadata may be accepted or removed according to the owner's preference. A history rewrite would change commit identities and require coordination; none was attempted. Preserving the original build history is valuable, so do not rewrite it merely for cosmetic reasons.
 
-### Current software security exposure
+### Software security exposure at baseline
 
 The firmware connects to WiFi and configures NTP. No HTTP server, web command API, OTA handler, or cloud-control service is implemented in the inspected source. The web architecture in the improvements brief is proposed, not an existing exposed endpoint.
 
@@ -168,7 +171,7 @@ flowchart LR
 
 The brief says motor timing is `millis()`-based in its proposed file tree but describes `micros()` elsewhere. It also refers to a full manual test checklist that the README does not actually contain. Clarify these before treating the proposal as an implementation reference. For this portfolio goal, new web/OTA features are optional; accurate documentation and evidence of a working mechanism provide a more immediate benefit.
 
-## Verification and release boundary
+## Verification and release boundary at baseline
 
 Completed checks: source and documentation inspection, reachable-history scanning, decompressed CAD metadata inspection, visual review of the wiring image, PNG provenance inspection, ignore-rule verification, Git object integrity checking, and local Markdown link checks. Manufacturer references were used to verify the driver documentation issue.
 

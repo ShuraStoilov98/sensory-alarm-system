@@ -1,10 +1,10 @@
 # Electrical wiring reference
 
-Logical connections for the ESP32 curtain prototype. This reference replaces the earlier AI-generated wiring image, which contained incorrect and ambiguous connections. Verify the exact ESP32 board and DRV8825 carrier against their manufacturer diagrams before assembly: the original carrier revision has not yet been recorded.
+Logical connections for the ESP32 curtain prototype. The restored illustration retains the original visual style and corrects the earlier wiring errors. It was regenerated with AI and checked against the connection tables and manufacturer references below; it has not been validated on the physical assembly. Verify the exact ESP32 board and DRV8825 carrier against their manufacturer diagrams before assembly: the original carrier revision has not yet been recorded.
 
-![Functional connection overview](images/connections.svg)
+![ESP32 curtain alarm wiring illustration](Wiring_diagram.png)
 
-The illustration shows connections between functions, not the physical order of pins on a carrier. Use the labels printed on the actual board and its schematic.
+The illustration shows logical nets. The component artwork does not specify physical GPIO or carrier pin positions. Repeated GND symbols name one common ground; matching motor tags and input/power equations define the remaining connections. Use the labels printed on the actual board and its schematic. The tables below are the authoritative project mapping; an [editable overview](images/connections.svg) and [image generation notes](images/wiring-generation.txt) are also available.
 
 ## Components and power
 
@@ -25,7 +25,7 @@ Place the bulk capacitor directly across VMOT and GND near the carrier, with its
 
 ## Controller signals
 
-These assignments match [main.cpp](../src/esp32/main.cpp):
+These assignments match [config.h](../src/esp32/config.h):
 
 | ESP32 | DRV8825 | Function |
 | --- | --- | --- |

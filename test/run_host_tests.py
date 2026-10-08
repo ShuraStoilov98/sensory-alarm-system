@@ -12,13 +12,16 @@ import tempfile
 def main():
     root = Path(__file__).resolve().parents[1]
     source = root / "test/host/firmware_test.cpp"
+    modules = sorted((root / "src/esp32").glob("*.cpp"))
     compiler = shlex.split(os.environ.get("CXX", "c++"))
     scenarios = re.findall(r'\{"([a-z_]+)", \w+\}', source.read_text())
     with tempfile.TemporaryDirectory(prefix="curtain-tests-") as directory:
         executable = Path(directory) / "firmware-tests"
         subprocess.run(
             [*compiler, "-std=c++17", "-Wall", "-Wextra", "-Werror", "-UNDEBUG",
-             "-I", str(root / "test/host/stubs"), str(source), "-o", str(executable)],
+             "-I", str(root / "test/host/stubs"),
+             "-include", str(root / "test/host/stubs/clock_override.h"),
+             str(source), *map(str, modules), "-o", str(executable)],
             check=True,
         )
         for scenario in scenarios:
