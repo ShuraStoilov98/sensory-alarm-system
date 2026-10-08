@@ -1,321 +1,91 @@
-# Sensory Alarm System Build
+# Sensory Alarm System
 
-Last updated: 16/04/2026
+An ESP32 alarm that opens bedroom curtains with a stepper motor and a printed mechanism. A physical direction switch and hold-to-run button provide manual control; end stops and a five-second timeout bound each movement.
 
-## BACKGROUND
-This project was originally build by Simona Todorova and Alexander Stoilov as a fun X-mas build-athon project with Arduino Mega2560 to control motors and ESP32 for time and wifi integration. Sofware was managed in Arduino IDE and local folders on PCs, CAD done on SolidWorks and wiring and mechanical install conducted in bedroom curtains in Dec 2024 (Christmas weekend).
+![Connection overview for the ESP32, switches, driver and motor](docs/images/connections.svg)
 
-This repo is solo project in April 2026 of improvemnt building upon and profesionalising initial 2-day buildathon with following improvements: 
-- Migration to PlatformIO for proper embedded programming workflow
-- System simplification and streamline to eliminate Arduino and only use ESP32
+[Wiring](docs/Electrical.md) · [Printable parts](docs/Mechanical.md) · [Hardware checks](docs/Validation.md) · [Public readiness](docs/public_readiness_report.md)
 
-## 📌 Overview
+## The build
 
-This project implements a **smart curtain automation system** powered by an ESP32.
-It combines:
+Simona Todorova and Alexander Stoilov built the original version over Christmas weekend in December 2024, using an Arduino Mega2560 for motor control, an ESP32 for WiFi/time, SolidWorks CAD, and a physical curtain installation.
 
-* Time-based automation (NTP via WiFi)
-* Manual control (button + direction switch)
-* Safety constraints (end-stop switches)
-* Stepper motor control (DRV8825 + NEMA17)
+Alexander's subsequent work migrated the firmware to PlatformIO and simplified the electronics to a single ESP32. The October 2026 public-readiness pass added hold-to-run control, cooperative motor stepping, latched faults, reliable offline manual control, daylight-saving rules, and date-based alarm tracking. The original Git history and contributor credit remain intact.
 
-The system opens/closes curtains either:
+**Status:** personal hardware prototype. The earlier build was reported working; the revised firmware has automated behavior checks and a compile check, but still needs validation on the assembled hardware. A real installation photo and demonstration video are still to be added.
 
-1. Automatically at a scheduled time (alarm)
-2. Manually via a physical button
+## Printed mechanism
 
----
+These are previews embedded in the original CAD exports, rather than photographs of the installed build. Download the models and read the [printing and assembly notes](docs/Mechanical.md).
 
-## 🧱 Current Architecture
+| Curtain puller | Controller and driver holder | Button holder |
+| --- | --- | --- |
+| ![Curtain puller CAD preview](docs/images/curtain-puller.png) | ![ESP32 and driver holder CAD preview](docs/images/controller-holder.png) | ![Button holder CAD preview](docs/images/button-holders.png) |
+| [CurtainPuller_v2.3mf](mechanical%20parts/CurtainPuller_v2.3mf) | [ESP32-DRV-BTNs_Holder.3mf](mechanical%20parts/ESP32-DRV-BTNs_Holder.3mf) | [Button_holders.3MF](mechanical%20parts/Button_holders.3MF) |
 
-### Hardware
+## How it works
 
-* **ESP32** (main controller)
-* **DRV8825** stepper driver
-* **NEMA17 motor**
-* **2x limit switches** (fully open / fully closed)
-* **1x manual button**
-* **1x direction switch**
-
-### Pin Mapping
-
-```cpp
-// Motor
-STEP_PIN = 25
-DIR_PIN = 26
-ENABLE_PIN = 27
-
-// Inputs
-BUTTON_PIN = 14
-DIR_BUTTON = 13
-KILL_SWITCH_CLOSED_PIN = 33
-KILL_SWITCH_OPENED_PIN = 32
+```mermaid
+flowchart LR
+    TIME["WiFi and NTP"] --> ESP["ESP32"]
+    BUTTON["Hold-to-run button and direction switch"] --> ESP
+    LIMITS["Open and closed end stops"] --> ESP
+    ESP -->|STEP DIR ENABLE| DRIVER["DRV8825"]
+    DRIVER --> MOTOR["NEMA17"]
+    MOTOR --> CURTAIN["Printed curtain mechanism"]
 ```
 
----
+- **Manual:** select direction, then hold the run button. Release stops immediately on the next loop. Changing direction stops the current run; release and press again to move in the new direction. Manual control works without WiFi or valid time.
+- **Automatic:** open at **06:30 Bulgarian local time**, with winter/summer timezone rules. The alarm can be evaluated throughout that minute; there is no late catch-up. A button press interrupts automatic movement, and manual activity during the scheduled minute suppresses that day's automatic run.
+- **Daily tracking:** the automatic attempt date is saved in ESP32 NVS before movement, preventing a repeat after restart. An already-open curtain or manual/fault override consumes the day too; skipped dates encountered during travel are saved after movement stops. A power loss before that deferred save can lose the skipped-date record.
+- **Motor:** STEP pulses are generated cooperatively, with 500µs minimum high/low intervals. No catch-up pulse bursts are emitted. WiFi reconnect requests and flash writes are deferred during travel.
+- **Faults:** a five-second timeout or both limit switches active disables the driver and latches a fault until restart. Inspect the wiring and mechanism before restarting. A button held during boot must first be released.
 
-## ⚙️ Software Design
+The alarm time, GPIO assignments, timezone rules, and motor settings live at the top of [main.cpp](src/esp32/main.cpp). Persisted attempt dates are independent of the compiled alarm setting; reflashing or rebooting is not a routine way to re-run today's alarm.
 
-### Core Responsibilities
+## Build and flash
 
-* WiFi connection + reconnection
-* NTP time sync (daily)
-* Alarm trigger logic
-* Manual override control
-* Motor driving with safety checks
+Requires an ESP32 DevKit compatible with PlatformIO's `esp32dev` definition, a data-capable USB cable, and [PlatformIO Core or its VS Code extension](https://docs.platformio.org/en/latest/core/installation/index.html). The platform and Arduino framework revision are pinned in [platformio.ini](platformio.ini).
 
----
-
-### Key Modules
-
-#### 1. Motor Control
-
-* `stepMotor()` generates step pulses
-* `openCurtain()` / `closeCurtain()` handle movement
-* Safety:
-
-  * End-stop switches
-  * Timeout (15s max run)
-
----
-
-#### 2. Input Handling
-
-* Pull-up configuration (`INPUT_PULLUP`)
-* Debounced button input
-* Direction read via switch
-
----
-
-#### 3. Time & Alarm
-
-* NTP sync via `pool.ntp.org`
-* Daily alarm trigger (hour + minute)
-* Reset logic per day
-
----
-
-#### 4. WiFi Management
-
-* Initial connect with timeout
-* Periodic reconnect (guarded)
-* Sync only when connected
-
----
-
-## 🛡️ Safety Features
-
-* ✅ Motor timeout (prevents infinite run)
-* ✅ End-stop detection (hardware limits)
-* ✅ Debounced inputs
-* ✅ WiFi reconnect guard (prevents spam)
-* ✅ Alarm trigger protection (once per day)
-
----
-
-## ⚠️ Known Limitations (Current Version)
-
-* ❌ Blocking motor control (`while` loops)
-* ❌ Blocking WiFi connect (partial)
-* ❌ 1-second loop delay (reduced responsiveness)
-* ❌ No concurrency (motor blocks system)
-
----
-
-## 🧠 Design Decisions
-
-### Why ESP32 only?
-
-* Eliminated Arduino Mega (redundant)
-* Reduced system complexity
-* Improved reliability (no inter-device comms)
-* Enabled future features (OTA, app control)
-
----
-
-### Why `INPUT_PULLUP`?
-
-* Prevents floating inputs
-* More stable hardware behavior
-* Simplifies wiring (no external resistors)
-
----
-
-### Why time window (`tm_sec < 5`)?
-
-* Prevents missed alarms due to loop timing
-
----
-
-## 🚀 Next Steps
-
-### 🔥 High Priority
-
-* [ ] Convert to **non-blocking architecture**
-* [ ] Implement **state machine** (IDLE / OPENING / CLOSING)
-* [ ] Remove `delay()` usage
-* [ ] Make motor stepping time-based (`micros()`)
-
----
-
-### ⚡ Medium Priority
-
-* [ ] Add motor acceleration (ramp up/down)
-* [ ] Improve WiFi reconnect (fully non-blocking)
-* [ ] Add persistent config (alarm time, etc.)
-
----
-
-### 🧪 Testing
-
-* [ ] Validate end-stop reliability
-* [ ] Test timeout behavior
-* [ ] Simulate WiFi loss
-* [ ] Long-run stability test
-
----
-
-## 🔮 Future Ideas
-
-* Mobile app control (via WiFi)
-* Speaker integration for musical experience 
-* OTA firmware updates
-* Light sensor integration (auto open at sunrise)
-* Multi-curtain system
-* Voice assistant integration
-
----
-
-## 📂 Project Structure
-
-```
-sensory-alarm-system-build/
-├── src/
-│   └── esp32/
-│       └── main.cpp
-├── include/
-│   ├── secrets.h         # ignored in git
-│   └── secrets.example.h # template
-├── platformio.ini
-├── README.md
-└── .gitignore
-```
-
----
-
-## 🔐 Secrets Handling
-
-WiFi credentials stored in:
-
-```
-include/secrets.h
-```
-
-Example:
-
-```cpp
-#define WIFI_SSID "your_wifi"
-#define WIFI_PASSWORD "your_password"
-```
-
-This file is excluded from version control.
-
----
-
-## 🚀 Deploy to Device (Build & Flash)
-
-### Prerequisites
-
-* [PlatformIO Core](https://docs.platformio.org/en/latest/core/installation/index.html) (CLI) or the PlatformIO IDE extension for VS Code
-* USB cable connected to the ESP32 DevKit
-* USB-to-serial drivers for the board if not auto-detected (most DevKits use CP2102 or CH340)
-
-### 1. Configure secrets
+Copy the credential template, then edit only the local copy:
 
 ```bash
 cp include/secrets.example.h include/secrets.h
 ```
 
-Edit `include/secrets.h` and fill in your WiFi credentials:
+`include/secrets.h` is ignored by Git. Keep personal credentials out of commits, screenshots, and downloadable firmware; compiled firmware contains the supplied credentials.
 
-```cpp
-#define WIFI_SSID "your_wifi"
-#define WIFI_PASSWORD "your_password"
-```
-
-### 2. Build
+Compile, identify the serial port, then flash and monitor:
 
 ```bash
-pio run
-```
-
-Compiles the firmware and reports flash/RAM usage. Fix any errors here before proceeding — this step does not touch the device.
-
-### 3. Identify the serial port (if upload doesn't auto-detect)
-
-```bash
+pio run --environment esp32
 pio device list
-```
-
-Look for the ESP32's COM port (Windows) or `/dev/ttyUSB*` / `/dev/cu.*` (Linux/macOS).
-
-### 4. Flash
-
-```bash
-pio run --target upload
-```
-
-If upload fails to connect, hold the **BOOT** button on the ESP32 while the upload starts (some boards need this to enter flash mode), and release once "Connecting..." completes.
-
-### 5. Monitor serial output
-
-```bash
+pio run --environment esp32 --target upload
 pio device monitor
 ```
 
-Runs at `115200` baud (matches `Serial.begin(115200)` in [main.cpp](src/esp32/main.cpp) and `monitor_speed` in [platformio.ini](platformio.ini)). Use this to watch WiFi connection, NTP sync, alarm triggers, and the motor timeout diagnostics.
+The serial monitor uses **115200 baud**. If upload cannot connect, hold the board's BOOT button while connecting. Initially disconnect the motor PSU and verify logic before introducing motor movement. Follow the [wiring reference](docs/Electrical.md) and [commissioning checklist](docs/Validation.md) before running the assembled mechanism.
 
-Build, flash, and monitor in one step:
+## Verification
+
+Run the firmware behavior tests with Python 3 and a C++17 compiler on Linux, macOS or WSL:
 
 ```bash
-pio run --target upload --target monitor
+python3 test/run_host_tests.py
 ```
 
-### Before powering the motor
+The tests execute the actual firmware with fake GPIO, WiFi, flash storage, and clocks. They cover offline control, release-to-stop, debounce, alarm/manual interaction, timeout faults, end stops, persistent dates, timer rollover, and seasonal timezone behavior. They do not establish motor timing or electrical safety on the real board. [GitHub Actions](.github/workflows/checks.yml) runs the behavior tests and compiles with placeholder credentials; no firmware artifacts are uploaded.
 
-* Flash and verify Serial output first with the 9V motor supply **disconnected** — `ENABLE_PIN` defaults `HIGH` (driver disabled) at boot, but confirm WiFi/NTP/button logic behaves as expected before introducing motor movement.
-* Double-check `VMOT` polarity on the DRV8825 before connecting the 9V supply — reversed polarity destroys the driver (see [docs/Wiring_diagram.png](docs/Wiring_diagram.png) safety notes).
-* Keep the Serial Monitor open during the first motorized test run so timeout/limit-switch diagnostics are visible immediately.
+Record physical results in [Validation.md](docs/Validation.md), including the actual carrier/motor model, current limit, curtain travel time, and end-stop behavior.
 
----
+## Limitations and future work
 
-## ✅ Current Status
+End stops are polled by firmware and are not an independent hardware emergency stop. An unplugged switch reads inactive with the current pull-up wiring; there is no obstruction sensing. Driver disable at boot depends on software until the ESP32 configures the GPIO. Mechanical loads and restart behavior need physical validation.
 
-✔ Functional
-✔ Safe (basic protections in place)
-✔ Simplified architecture (ESP32 only)
-⚠ Not yet non-blocking
-🚀 Ready for next upgrade
+Software-generated step timing can vary with ESP32 background work. Acceleration, editable/persistent alarm settings, a web interface, and OTA updates are not implemented. The [improvements brief](docs/improvements_brief.md) describes future extensions. The firmware intentionally remains a small single-file project.
 
----
+The compile-tested PlatformIO baseline uses Arduino 2.0.17 / ESP-IDF 4.4.7. ESP-IDF 4.4 is [past vendor support](https://github.com/espressif/esp-idf/releases/tag/v4.4.8); a supported SDK migration remains necessary before treating this legacy prototype as maintained network-connected firmware.
 
-## 🧠 Key Learning Milestones
+## License
 
-* Transition from Arduino IDE → PlatformIO
-* Proper project structure + Git integration
-* Understanding of embedded constraints
-* Introduction to state machines (next step)
-
----
-
-## 👣 Next Session
-
-👉 Implement **non-blocking state machine architecture**
-
-This will:
-
-* Remove all blocking code
-* Enable concurrent behavior
-* Upgrade system to production-grade design
-
----
+[MIT](LICENSE). See the build background above for original contributor credit.

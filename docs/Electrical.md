@@ -1,410 +1,73 @@
-# ELECTRICAL.md
+# Electrical wiring reference
 
-# Sensory Alarm Module — Electrical Wiring Documentation
+Logical connections for the ESP32 curtain prototype. This reference replaces the earlier AI-generated wiring image, which contained incorrect and ambiguous connections. Verify the exact ESP32 board and DRV8825 carrier against their manufacturer diagrams before assembly: the original carrier revision has not yet been recorded.
 
-## Purpose
-This document is the source of truth (SoT) for the electrical wiring of the ESP32-based sensory alarm curtain module.
+![Functional connection overview](images/connections.svg)
 
-The accompanying wiring diagram (`Wiring_diagram.png`) is useful for visual orientation but was AI-generated and may contain minor inaccuracies or ambiguities.
+The illustration shows connections between functions, not the physical order of pins on a carrier. Use the labels printed on the actual board and its schematic.
 
-Always follow THIS document as the authoritative reference.
+## Components and power
 
+| Component | Current design | Detail still needed |
+| --- | --- | --- |
+| Controller | ESP32 DevKit, `esp32dev` build target | Exact board/module and revision |
+| Motor driver | DRV8825 carrier | Manufacturer, revision and sense-resistor values |
+| Motor | Bipolar NEMA17 stepper | Part number, rated coil current and verified coil pairs |
+| Controller supply | 5V through USB | USB supply/data cable suited to the board |
+| Motor supply | Separate 9V DC supply; previous design recommended at least 2A | Actual supply rating and voltage under load |
+| Local decoupling | 100µF electrolytic, at least 25V, near VMOT/GND | Installation and polarity confirmed on hardware |
 
-![Wiring Architecture](Wiring_diagram.png)
+The DRV8825 operating supply range is 8.2–45V. The proposed 9V supply is near the lower boundary, so verify that its voltage remains suitable under load. Use a supply sized for the actual motor and configured current limit, rather than treating NEMA17's frame size as an electrical specification. See the [TI datasheet](https://www.ti.com/lit/ds/symlink/drv8825.pdf) and [Pololu carrier reference](https://www.pololu.com/product/2133/).
 
----
+Power the ESP32 through USB. Connect motor PSU positive to **VMOT** and negative to **driver GND**. Connect **ESP32 GND, driver GND, motor PSU negative and all switch grounds together**. Neither USB 5V nor ESP32 3V3 powers VMOT.
 
-# System Overview
+Place the bulk capacitor directly across VMOT and GND near the carrier, with its positive lead to VMOT. Pololu documents destructive LC supply spikes and recommends at least 47µF local bulk capacitance for its carrier; the original design specifies 100µF. A small onboard ceramic capacitor alone does not replace that bulk capacitor.
 
-Main components:
+## Controller signals
 
-- ESP32 DevKit
-- DRV8825 stepper driver
-- NEMA17 stepper motor
-- 9V DC motor power supply
-- USB-powered ESP32
-- Manual control button
-- Direction switch/button
-- Open limit switch
-- Closed limit switch
+These assignments match [main.cpp](../src/esp32/main.cpp):
 
----
+| ESP32 | DRV8825 | Function |
+| --- | --- | --- |
+| GPIO25 | STEP | Step pulses |
+| GPIO26 | DIR | HIGH opens; LOW closes, subject to motor orientation |
+| GPIO27 | ENABLE / nENBL | HIGH disables; LOW enables |
+| 3V3 | RESET / nRESET and SLEEP / nSLEEP | Hold both high for normal operation |
+| GND | GND | Shared signal reference |
 
-# Power Architecture
+**Standard DRV8825 carriers do not have a VDD logic-supply input.** The A4988 VDD pin position is FAULT on standard DRV8825 carriers. Do not use the old diagram's VDD instruction. Some carriers include protection that makes a logic supply on FAULT tolerable for A4988 compatibility, but that must not be assumed for an unidentified clone. FAULT is not currently read by this firmware. Verify the actual carrier's pinout and circuit in its documentation.
 
-## ESP32 Power
+The DRV8825 accepts 3.3V control signals. M0, M1 and M2 are left unconnected in the original full-step configuration; verify the carrier's pull-downs and selected mode. RESET/SLEEP must be high during operation. The former blanket instruction never to connect them to GND was misleading: low intentionally disables/resets or sleeps the driver.
 
-ESP32 is powered ONLY via its USB connector.
+GPIO27 is driven HIGH during firmware startup and whenever movement ends. Before that configuration, software cannot guarantee the driver's state. If an independently disabled boot state is needed, verify an appropriate external pull-up or hardware interlock for the actual carrier.
 
-Recommended:
+## Switches
 
-- USB connection to PC during development
-- 5V USB wall charger for standalone operation
+All four inputs use `INPUT_PULLUP`. Each contact connects its GPIO to common GND when active.
 
-Do NOT inject 5V directly into random ESP32 pins unless intentionally using VIN.
+| Input | ESP32 GPIO | Inactive | Active |
+| --- | --- | --- | --- |
+| Hold-to-run button | 14 | HIGH, released | LOW, held |
+| Direction switch | 13 | HIGH, opening selected | LOW, closing selected |
+| Opened limit | 32 | HIGH | LOW, fully open |
+| Closed limit | 33 | HIGH | LOW, fully closed |
 
----
+For switches with COM/NO/NC contacts, verify that the selected pair closes at the intended actuation point. The current logic expects an inactive-open, active-closed contact. A broken or unplugged wire therefore looks inactive; this circuit does not detect that fault independently.
 
-## Motor Power
+The destination limit stops travel. Travel away from an active opposite limit is allowed. Both limits active together latch a fault. A manual release or direction change stops manual travel; changing direction requires a released button and a new press. A press during automatic travel interrupts it, then requires release before manual movement can begin.
 
-DRV8825 motor power is supplied separately.
+## Motor and current limit
 
-Motor PSU:
+Connect one verified coil pair to A1/A2 and the other to B1/B2. Wire colors and carrier orientation vary: establish pairs with a continuity/resistance check while all supplies are disconnected. Do not copy the earlier assumed color/order table without verifying the actual motor.
 
-- 9V DC
-- >= 2A recommended
+Set the current limit according to the motor's rated coil current, the carrier's sense resistors, and cooling. The TI relation is `I_limit = VREF / (5 × R_sense)`. On the referenced Pololu carrier with 0.100Ω resistors this becomes `I_limit = 2 × VREF`; other carriers may differ. Measure and record the actual setting. The old generic 0.5–0.8A recommendation is not sufficient without the motor and carrier specifications.
 
-Connections:
+Start with an unloaded mechanism, verify direction and limit behavior, and then test the installed curtain. Check driver/motor temperature and mechanical binding during repeated operation.
 
-| Power Supply | DRV8825 |
-|---|---|
-| +9V | VMOT |
-| GND | GND |
+## Power and commissioning
 
----
+Disconnect both supplies before rewiring. Never reverse VMOT polarity or plug/unplug motor leads while the driver is powered.
 
-# COMMON GROUND (CRITICAL)
+For the first logic checks, power only the ESP32 over USB with motor power disconnected. Verify that idle/fault states disable the driver, switches register the expected states, and release stops the manual command. Then connect the correctly wired motor supply for an unloaded test, keeping the supply accessible for immediate disconnection.
 
-Even though the ESP32 is powered via USB, all grounds MUST be connected together.
-
-Required shared ground connections:
-
-| Source | Destination |
-|---|---|
-| ESP32 GND pin | DRV8825 GND |
-| 9V PSU negative | DRV8825 GND |
-| Button/switch grounds | Common GND |
-
-The ESP32 USB ground is internally connected to ESP32 GND pins.
-
-Failure to share grounds will cause unreliable or non-functional STEP/DIR signaling.
-
----
-
-# ESP32 GPIO Mapping
-
-## DRV8825 Control Pins
-
-| Function | ESP32 Pin | DRV8825 Pin |
-|---|---|---|
-| STEP | GPIO25 | STEP |
-| DIR | GPIO26 | DIR |
-| ENABLE | GPIO27 | ENABLE |
-
----
-
-## Inputs
-
-| Function | ESP32 Pin |
-|---|---|
-| Manual run button | GPIO14 |
-| Direction switch/button | GPIO13 |
-| Curtain closed limit switch | GPIO33 |
-| Curtain opened limit switch | GPIO32 |
-
-IMPORTANT:
-
-GPIO12 was intentionally avoided because it is an ESP32 boot strapping pin.
-
-GPIO13 is used instead for stable boot behavior.
-
----
-
-# Input Wiring
-
-All inputs use:
-
-```cpp
-INPUT_PULLUP
-```
-
-Therefore:
-
-- default state = HIGH
-- triggered/pressed state = LOW
-
-No external pull-up resistors are required.
-
----
-
-## Button Wiring
-
-### Manual Run Button
-
-| Connection | Connection |
-|---|---|
-| GPIO14 | Button terminal 1 |
-| GND | Button terminal 2 |
-
----
-
-## Direction Switch/Button
-
-| Connection | Connection |
-|---|---|
-| GPIO13 | Switch terminal 1 |
-| GND | Switch terminal 2 |
-
----
-
-## Limit Switch Wiring
-
-### Closed Limit Switch
-
-| Connection | Connection |
-|---|---|
-| GPIO33 | Switch terminal 1 |
-| GND | Switch terminal 2 |
-
-### Opened Limit Switch
-
-| Connection | Connection |
-|---|---|
-| GPIO32 | Switch terminal 1 |
-| GND | Switch terminal 2 |
-
-Logic convention:
-
-- switch open = HIGH
-- switch triggered = LOW
-
----
-
-# DRV8825 Wiring
-
-## Logic Power
-
-| DRV8825 | Connects To |
-|---|---|
-| VDD | ESP32 3V3 |
-| GND | ESP32 GND |
-
-ESP32 3.3V logic is fully compatible with DRV8825.
-
-No level shifter required.
-
----
-
-## Driver State Pins
-
-RESET and SLEEP must NOT be connected to GND.
-
-Correct configuration:
-
-| DRV8825 Pin | Connects To |
-|---|---|
-| RESET | 3V3 |
-| SLEEP | 3V3 |
-| RESET ↔ SLEEP | tied together |
-
-This keeps the driver awake and operational.
-
----
-
-## ENABLE Pin
-
-ENABLE is controlled by software.
-
-| DRV8825 | ESP32 |
-|---|---|
-| ENABLE | GPIO27 |
-
-Logic:
-
-| ENABLE State | Driver State |
-|---|---|
-| LOW | enabled |
-| HIGH | disabled |
-
-Firmware initializes driver disabled at boot.
-
----
-
-## Microstepping Pins
-
-| Pin |
-|---|
-| M0 |
-| M1 |
-| M2 |
-
-Current configuration:
-
-- left unconnected
-- defaults to full-step mode
-
-This is acceptable for MVP testing.
-
----
-
-# DRV8825 Protection Capacitor (IMPORTANT)
-
-A bulk capacitor MUST be installed close to the DRV8825.
-
-Required:
-
-- 100uF electrolytic capacitor
-- 25V or higher rating
-
-Connections:
-
-| Capacitor Lead | Connection |
-|---|---|
-| + | VMOT |
-| - | GND |
-
-IMPORTANT:
-
-The small yellow capacitor already present on the DRV8825 module is NOT sufficient.
-
-Failure to add the bulk capacitor can damage the DRV8825 from motor voltage spikes.
-
----
-
-# NEMA17 Wiring
-
-## IMPORTANT
-
-NEMA17 wire colors vary between manufacturers.
-
-Always verify coil pairs using:
-
-- multimeter continuity mode
-- or shaft resistance test
-
----
-
-## Typical Coil Pairing
-
-Most common mapping:
-
-| Coil | Wires |
-|---|---|
-| Coil A | Black + Green |
-| Coil B | Red + Blue |
-
----
-
-## DRV8825 Motor Outputs
-
-Physical order on DRV8825:
-
-```text
-Top
-B2
-B1
-A1
-A2
-Bottom
-```
-
-Typical mapping:
-
-| DRV8825 Pin | Motor Wire |
-|---|---|
-| B2 | Red |
-| B1 | Blue |
-| A1 | Black |
-| A2 | Green |
-
-If motor only vibrates or twitches:
-
-- coil pairs are likely incorrect
-- re-check continuity
-
----
-
-# Current Limit Adjustment (IMPORTANT)
-
-DRV8825 current limit potentiometer MUST be adjusted before sustained operation.
-
-Starting recommendation:
-
-- conservative / low current setting
-- approximately 0.5–0.8A for typical small NEMA17 motors
-
-Failure to adjust current limit may cause:
-
-- overheating
-- driver damage
-- motor overheating
-- missed steps
-
----
-
-# Safe Power-On Sequence
-
-## Power ON
-
-1. Connect ESP32 USB power
-2. Verify ESP32 boot and serial logs
-3. Connect 9V motor power
-
----
-
-## Power OFF
-
-1. Disconnect 9V motor power first
-2. Disconnect ESP32 USB second
-
----
-
-# Critical Safety Rules
-
-NEVER:
-
-- disconnect motor wires while powered
-- modify VMOT wiring while powered
-- reverse VMOT polarity
-- connect RESET/SLEEP to GND
-
-DRV8825 drivers are sensitive to wiring mistakes and voltage spikes.
-
----
-
-# Firmware Assumptions
-
-Current firmware assumptions:
-
-```cpp
-isFullyOpen()   => GPIO32 LOW
-isFullyClosed() => GPIO33 LOW
-```
-
-Meaning:
-
-- limit switch triggered = LOW
-- normal state = HIGH
-
-The firmware also assumes:
-
-```cpp
-ENABLE LOW  => motor enabled
-ENABLE HIGH => motor disabled
-```
-
----
-
-# Development / Debugging Notes
-
-Recommended development workflow:
-
-- ESP32 powered from PC USB
-- serial monitor at 115200 baud
-- motor initially tested unloaded
-- 9V motor supply disconnected during first logic tests
-
-PlatformIO monitor configuration:
-
-```ini
-monitor_speed = 115200
-```
-
----
-
-# Referenced Files
-
-- `Wiring_diagram.png`
-- `src/esp32/main.cpp`
-- `platformio.ini`
-
+After a timeout or contradictory-limit fault, disconnect motor power, inspect the cause, and restart only when corrected. These software protections are not an independent emergency stop. Follow and record the [hardware validation checklist](Validation.md).
