@@ -14,27 +14,27 @@ The intended release is a documented personal hardware prototype. Filming a work
 | Video | Provide a six-second [CAD turntable](images/cad-turntable.mp4), with an [inline GIF](images/cad-turntable.gif). It renders the original 3MF geometry and is explicitly labeled as CAD, not operating footage. |
 | Release scope | Publish the current stack as a documented legacy prototype. A supported SDK migration and bench acceptance are future maintenance work, not prerequisites for sharing prototype source honestly. |
 
-## Publish the sanitized history
+## Published repository and future pushes
 
-The installed local cleanup was verified across all 19 commits: 30 personal author/committer email fields and two historical CAD path entries were removed. All other CAD archive entries remain byte-identical. Contributor names, dates and messages are preserved; rewritten commit IDs change and existing commit signatures cannot be retained as valid signatures.
+The cleaned history was published on 8 October 2026 to the independent [sensory-alarm-system repository](https://github.com/ShuraStoilov98/sensory-alarm-system). The initial upload contains 20 commits through `844dc80`, including the final presentation assets. The owner created this destination as public. The original repository's `main` was also updated successfully with an explicit force-with-lease.
 
-The cleaned history is installed locally. Review and commit the media/documentation changes. Select the changed files explicitly, inspect the staged diff, and commit with a descriptive message. Check that your GitHub noreply address is configured; the cleanup sets a noreply alias locally. Use the exact address shown in your [GitHub email settings](https://docs.github.com/en/account-and-profile/how-tos/email-preferences/setting-your-commit-email-address) if GitHub profile attribution requires its numeric ID format.
+The cleanup covered the preceding 19 commits: 30 personal author/committer email fields and two historical CAD path entries were removed. All other CAD archive entries remain byte-identical. Contributor names, dates and messages are preserved; rewritten commit IDs change and existing commit signatures cannot be retained as valid signatures. A follow-up check of all 20 commits on the published branch found no personal email fields or private Windows paths in CAD archives; the checkout secret scan found no credential candidates.
 
-Publish the cleaned branch before pulling or merging the previous remote history, which would reintroduce its private metadata. The local cleanup records the old remote tip in `.git/privacy-cleanup-lease`. That file is local bookkeeping, not a repository asset. Use its value as an explicit lease when publishing:
+The local `public` remote points to `https://github.com/ShuraStoilov98/sensory-alarm-system.git`, and `main` tracks `public/main`. Future normal updates use:
 
 ```bash
-git push --force-with-lease="refs/heads/main:$(cat .git/privacy-cleanup-lease)" origin main:main
+git push
 ```
 
-This updates only `main` and refuses if the server tip changed since the cleanup snapshot. A plain `--force-with-lease` would use the rewritten remote-tracking ref and could reject the intended update. If the explicit lease fails, inspect the new remote work and sanitize it too before retrying. Keep any force-push protection exception limited to this update, then restore it.
+Push only reviewed branches. Do not publish the entire local ref namespace with `--mirror`, which could include tool-owned checkpoints or old history. The `.git/privacy-cleanup-lease` file records the completed original-repository update; it is local bookkeeping and is no longer the publication procedure.
 
-Review other server-side branches/tags and any PR references before changing visibility. This local checkout has only `main`; server-side references have not been independently verified. Do not push the entire local ref namespace with `--mirror`, which would also include tool-owned checkpoint refs.
+Keep the original repository private. Re-clone other local copies from the new repository rather than merging previous history into the cleaned branch. An earlier pull fetched the old history locally but stopped before merging; the published `main` remains clean. A new repository isolates this release from the original repository's PR references and cached views, but does not erase old clones, forks or previously exposed copies. See [GitHub's history-cleanup guidance](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
 
-After publishing, confirm GitHub Actions passes on the cleaned branch. Re-clone other local copies rather than merging old history back into the cleaned branch. Forks, old clones and cached GitHub views can retain old data after a branch rewrite; removing every external copy is not something a local Git operation can guarantee. See [GitHub's history-cleanup guidance](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository) for PR references and support options.
+Confirm [GitHub Actions](https://github.com/ShuraStoilov98/sensory-alarm-system/actions) passes on the published branch. The push succeeded; hosted CI and the rendered public README have not been independently verified in this pass. Keep a GitHub noreply address configured for future commits; use the exact address in your [GitHub email settings](https://docs.github.com/en/account-and-profile/how-tos/email-preferences/setting-your-commit-email-address) if profile attribution requires its numeric ID format.
 
 ## Final portfolio setup
 
-1. Confirm the repository is public, or change visibility after the cleaned history and CI have been reviewed.
+1. Check the rendered README, images and diagrams in the public repository, and confirm GitHub Actions passes.
 2. Use a concise description, for example: **ESP32 curtain-opening alarm with printed mechanics, offline manual control and fault-aware firmware.**
 3. Add relevant topics such as `esp32`, `platformio`, `stepper-motor`, `3d-printing`, `embedded` and `alarm-clock`, then pin the repository if desired.
 4. Keep the original collaborator credit and MIT license. The supplied pictures are authorized by the owner's request to use them; no additional filming is required.

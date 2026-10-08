@@ -12,7 +12,7 @@ An ESP32 alarm that opens bedroom curtains with a stepper motor and a printed me
 
 Simona Todorova and Alexander Stoilov built the original version over Christmas weekend in December 2024, using an Arduino Mega2560 for motor control, an ESP32 for WiFi/time, SolidWorks CAD, and a physical curtain installation.
 
-Alexander's subsequent work migrated the firmware to PlatformIO and simplified the electronics to a single ESP32. The October 2026 public-readiness pass added hold-to-run control, cooperative motor stepping, latched faults, reliable offline manual control, daylight-saving rules, and date-based alarm tracking. Contributor names and original commit dates remain; personal email and CAD source-path metadata have been removed from local historical revisions.
+Alexander's subsequent work migrated the firmware to PlatformIO and simplified the electronics to a single ESP32. The October 2026 public-readiness pass added hold-to-run control, cooperative motor stepping, latched faults, reliable offline manual control, daylight-saving rules, and date-based alarm tracking. Contributor names and original commit dates remain; personal email and CAD source-path metadata have been removed from the published historical revisions.
 
 **Status:** personal hardware prototype. The earlier build was reported working; the revised firmware has automated behavior checks and a compile check, but still needs validation on the assembled hardware. The supplied installation photographs document the earlier assembly. An operating video is outside this release scope; the CAD animation below illustrates the original printable designs.
 

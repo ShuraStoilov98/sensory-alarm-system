@@ -81,4 +81,4 @@ Only persist settings when they change. Keep alarm-attempt tracking independent 
 
 The supplied controller and mechanism screenshots are now surfaced in the README, with AI-assisted formatting disclosed. A CAD turntable video/GIF uses the original 3MF geometry. Filming an operating demo is outside this release scope.
 
-Complete the [commissioning checks](Validation.md) and record the carrier and motor specifications before claiming the revised firmware is hardware-validated. Those checks can remain pending for a clearly documented prototype source release. See the [remaining publication steps](Publication.md).
+Complete the [commissioning checks](Validation.md) and record the carrier and motor specifications before claiming the revised firmware is hardware-validated. Those checks can remain pending for a clearly documented prototype source release. See the [publication status and remaining checks](Publication.md).

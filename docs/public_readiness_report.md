@@ -8,28 +8,28 @@ The baseline findings below describe the original commit. Links to the original 
 
 ## Status after implementation and privacy cleanup
 
-**Current verdict: suitable for a public portfolio as a documented legacy hardware prototype once the sanitized branch and final presentation changes are published.** The owner has authorized historical metadata removal and excluded filming an operating demo from scope. Contributor credit remains. The revised firmware is compile-tested; physical acceptance remains pending and is disclosed.
+**Current verdict: published as a documented legacy hardware prototype in the independent [sensory-alarm-system repository](https://github.com/ShuraStoilov98/sensory-alarm-system).** The owner has authorized historical metadata removal and excluded filming an operating demo from scope. Contributor credit remains. The revised firmware is compile-tested; physical acceptance remains pending and is disclosed.
 
 | Area | Current result |
 | --- | --- |
 | Firmware behavior | Focused controller/input/alarm/network modules; hold-to-run input; explicit motion, position, command source and latched fault status; shared guarded requests. |
 | Regression and build checks | 22 host scenarios pass; ESP32 release build uses 45,084 bytes RAM (13.8%) and 751,825 bytes flash (57.4%), with placeholder credentials. |
 | Wiring | Professional logical illustration restored prominently, backed by corrected connection tables and an editable SVG. Exact hardware pinout and bench acceptance remain unverified. |
-| Historical privacy | Verified sanitized copy preserves all 19 commits, contributor names, dates, messages, code and geometry; replaces 30 personal email fields and clears two historical CAD source paths. Installed locally; discarded local objects and old reflog identities purged. GitHub update remains pending. |
+| Historical privacy | Verified sanitized copy preserves all 19 commits, contributor names, dates, messages, code and geometry; replaces 30 personal email fields and clears two historical CAD source paths. The cleanup covered 19 commits; the published branch adds the presentation commit for 20 total. The original main update and independent main-only upload both succeeded. Old history was subsequently fetched locally without being merged into main. |
 | Current CAD files | Private source paths cleared; every non-metadata archive entry is preserved. |
 | Installation presentation | Screenshot 1 selected as the lead controller view and screenshot 2 as mechanism context. The stored photo-based contact sheet discloses AI-assisted processing; screenshots 3 and 4 omitted as darker duplicates. |
 | Animation | Six-second MP4 and inline GIF render actual 3MF geometry. Explicitly labeled CAD views, not operating footage. A real working video is outside scope. |
 | Original attribution | Contributor names and MIT license retained. The metadata cleanup changes commit IDs, not the project's chronology or credited contribution. |
 | SDK boundary | Current pinned stack remains an explicit legacy baseline; supported SDK migration is future maintenance before claiming maintained network-connected firmware. |
-| GitHub publication | Local rewrite does not update GitHub. Guarded main-only force push, hosted CI check, server-reference review and visibility review remain manual publication steps. |
+| GitHub publication | The owner created the independent destination as public and pushed cleaned main through `844dc80`. Hosted CI and the rendered README remain unverified in this pass. Keep the original repository private. |
 
 A deferred skipped-alarm date can be lost if power fails before the idle flash write. Automatic movement requires persistence first. A saved date far in the future suppresses subsequent earlier dates. These limitations remain described in [Validation.md](Validation.md).
 
 The dependency baseline uses Arduino core 2.0.17 and ESP-IDF 4.4.7. The 4.4 branch [reached end of life in July 2024](https://github.com/espressif/esp-idf/releases/tag/v4.4.8). Pinning establishes reproducibility, not current vendor security coverage; exhaustive dependency CVE applicability has not been assessed.
 
-Earlier scans with `detect-secrets` 1.5.0 found no credential candidates in the checkout and reachable historical file contents, including decompressed CAD text. The new sanitized history has also been structurally checked across every commit and archive revision. Its final checkout tree is byte-identical to the pre-cleanup tip; only historical CAD metadata and commit email fields differ. The final local scan covered 19 reachable commits, 70 file blobs, all three unique CAD archive versions and 21 decompressed archive text entries. It found zero personal commit email fields, private source paths, personal text emails, or credential candidates in checkout/history. Old local commit objects and reflog identities were purged. These results cover the local checkout and refs; GitHub caches, forks and other clones remain outside this local cleanup.
+Earlier scans with `detect-secrets` 1.5.0 found no credential candidates in the checkout and reachable historical file contents, including decompressed CAD text. The new sanitized history has also been structurally checked across every commit and archive revision. Its final checkout tree is byte-identical to the pre-cleanup tip; only historical CAD metadata and commit email fields differ. The final local scan covered 19 reachable commits, 70 file blobs, all three unique CAD archive versions and 21 decompressed archive text entries. It found zero personal commit email fields, private source paths, personal text emails, or credential candidates in checkout/history. Old local commit objects and reflog identities were purged at cleanup time, but a subsequent pull fetched the original history again without merging it. A follow-up check of all 20 commits on `main` found no personal email fields or private Windows paths in CAD archives; the checkout secret scan still found no credential candidates. The old objects can remain locally or in other copies and are not ancestors of the published main. These findings apply to the inspected content and cleaned branch; caches, forks and other clones remain outside this cleanup.
 
-See [Publication.md](Publication.md) for the concrete action list, guarded push command, selected media and remaining maintenance boundaries. Publication as prototype source does not require filming or a supported-SDK migration first; accurate scope disclosure does.
+See [Publication.md](Publication.md) for the publication status, normal push command, selected media and remaining maintenance boundaries. Publication as prototype source does not require filming or a supported-SDK migration first; accurate scope disclosure does.
 
 ## Original review
 
@@ -49,27 +49,27 @@ Priority reflects impact on users and public presentation, rather than a formal 
 
 ### High priority Wiring references are unreliable
 
-[Electrical.md](https://github.com/ShuraStoilov98/sensory-alarm-system-build/blob/cc3a14f/docs/Electrical.md), lines 176–185, instructs readers to connect DRV8825 `VDD` to ESP32 `3V3`. Standard DRV8825 carriers have an internal regulator and no external `VDD` logic supply; the corresponding A4988 carrier position is `FAULT` on a DRV8825. Some protected carriers tolerate a logic supply there, but that does not make the pin `VDD` or establish what this particular board supports. The physical carrier model and revision are not identified. See the manufacturer's [DRV8825 carrier documentation](https://www.pololu.com/product/2133/).
+[Electrical.md](https://github.com/ShuraStoilov98/sensory-alarm-system/blob/cc3a14f/docs/Electrical.md), lines 176–185, instructs readers to connect DRV8825 `VDD` to ESP32 `3V3`. Standard DRV8825 carriers have an internal regulator and no external `VDD` logic supply; the corresponding A4988 carrier position is `FAULT` on a DRV8825. Some protected carriers tolerate a logic supply there, but that does not make the pin `VDD` or establish what this particular board supports. The physical carrier model and revision are not identified. See the manufacturer's [DRV8825 carrier documentation](https://www.pololu.com/product/2133/).
 
-The [wiring image](https://github.com/ShuraStoilov98/sensory-alarm-system-build/blob/cc3a14f/docs/Wiring_diagram.png) also has visible discrepancies: the traced control wires do not consistently match the GPIO summary; RESET/SLEEP connections are not clearly shown; and the motor PSU positive connection is not clearly traced to VMOT. It labels itself accurate, while the text describes it as AI-generated and potentially inaccurate. The text cannot safely serve as its corrective source until the text is fixed too.
+The [wiring image](https://github.com/ShuraStoilov98/sensory-alarm-system/blob/cc3a14f/docs/Wiring_diagram.png) also has visible discrepancies: the traced control wires do not consistently match the GPIO summary; RESET/SLEEP connections are not clearly shown; and the motor PSU positive connection is not clearly traced to VMOT. It labels itself accurate, while the text describes it as AI-generated and potentially inaccurate. The text cannot safely serve as its corrective source until the text is fixed too.
 
 Correct both references against the actual board and its schematic before promoting either as a reproduction guide. Identify the carrier and motor part numbers, measured current-limit setting, coil pairs, PSU, and assembly orientation. The existing common-ground, bulk-capacitor, and powered-rewiring precautions are useful and should stay.
 
 ### High priority Manual control is disabled after the alarm
 
-[main.cpp](https://github.com/ShuraStoilov98/sensory-alarm-system-build/blob/cc3a14f/src/esp32/main.cpp), lines 202 and 225–234: the manual-control condition includes `!alarmTriggeredToday`, and the alarm sets that flag to `true`. After a normal morning opening, pressing the button to close the curtains does nothing for the rest of the day, until the flag is reset or the controller restarts.
+[main.cpp](https://github.com/ShuraStoilov98/sensory-alarm-system/blob/cc3a14f/src/esp32/main.cpp), lines 202 and 225–234: the manual-control condition includes `!alarmTriggeredToday`, and the alarm sets that flag to `true`. After a normal morning opening, pressing the button to close the curtains does nothing for the rest of the day, until the flag is reset or the controller restarts.
 
 The daily flag should govern automatic scheduling without gating manual operation. Verify manual closing immediately after an automatic opening.
 
 ### High priority Missing time prevents manual control and application recovery
 
-[main.cpp](https://github.com/ShuraStoilov98/sensory-alarm-system-build/blob/cc3a14f/src/esp32/main.cpp), lines 179–190: when `getLocalTime()` fails, `loop()` returns before checking the button, reconnecting WiFi, or running the application's time-sync retry. A cold power-on with unavailable WiFi or NTP can therefore leave the device unusable manually. If the initial WiFi connection fails, `syncTime()` skips NTP initialization as well.
+[main.cpp](https://github.com/ShuraStoilov98/sensory-alarm-system/blob/cc3a14f/src/esp32/main.cpp), lines 179–190: when `getLocalTime()` fails, `loop()` returns before checking the button, reconnecting WiFi, or running the application's time-sync retry. A cold power-on with unavailable WiFi or NTP can therefore leave the device unusable manually. If the initial WiFi connection fails, `syncTime()` skips NTP initialization as well.
 
 WiFi background behavior may eventually recover connectivity, but the application's own reconnect and sync logic is unreachable while time remains invalid. Keep button handling and recovery running independently of valid wall-clock time; only the automatic alarm requires it. Test a cold boot with WiFi unavailable, then restore the access point and verify recovery without resetting the ESP32.
 
 ### High priority Timeout does not latch a motor fault
 
-[main.cpp](https://github.com/ShuraStoilov98/sensory-alarm-system-build/blob/cc3a14f/src/esp32/main.cpp), lines 77–89, 100–112, and 201–214: a timeout stops and disables the driver, but records no persistent fault state. With an inactive or failed destination switch and a held run button, another movement attempt can start on the next eligible loop. The five-second limit bounds each attempt, rather than the total run while a fault persists.
+[main.cpp](https://github.com/ShuraStoilov98/sensory-alarm-system/blob/cc3a14f/src/esp32/main.cpp), lines 77–89, 100–112, and 201–214: a timeout stops and disables the driver, but records no persistent fault state. With an inactive or failed destination switch and a held run button, another movement attempt can start on the next eligible loop. The five-second limit bounds each attempt, rather than the total run while a fault persists.
 
 Releasing the button also does not stop a movement already in progress; the motor loops check only the destination switch and elapsed time. A disconnected limit-switch wire reads HIGH through the pull-up and is indistinguishable from normal travel. These are actuator safety limitations, not confirmed remote exploits. Define fault acknowledgement and stop behavior, and document that end stops currently depend on software polling. Replace blanket claims that the device is safe with the specific protections and limitations.
 
@@ -86,7 +86,7 @@ Reset or establish the current date before evaluating the alarm, and distinguish
 
 ### Medium priority README claims exceed the implementation
 
-[README.md](https://github.com/ShuraStoilov98/sensory-alarm-system-build/blob/cc3a14f/README.md), line 78, says the motor timeout is 15 seconds; [main.cpp](https://github.com/ShuraStoilov98/sensory-alarm-system-build/blob/cc3a14f/src/esp32/main.cpp), line 37, sets 5 seconds. The July commit `8af64f3` reduced it without updating that passage.
+[README.md](https://github.com/ShuraStoilov98/sensory-alarm-system/blob/cc3a14f/README.md), line 78, says the motor timeout is 15 seconds; [main.cpp](https://github.com/ShuraStoilov98/sensory-alarm-system/blob/cc3a14f/src/esp32/main.cpp), line 37, sets 5 seconds. The July commit `8af64f3` reduced it without updating that passage.
 
 The claimed debouncing is actually a 300 ms interval between accepted checks. There is no stable-input debounce or press/release edge tracking, and a held button can request repeated runs. The comments claiming direction is sampled once per press overstate what this logic does.
 
@@ -156,7 +156,7 @@ flowchart LR
 
 ## Unfinished improvements already in the repository
 
-[improvements_brief.md](https://github.com/ShuraStoilov98/sensory-alarm-system-build/blob/cc3a14f/docs/improvements_brief.md) explicitly labels itself a proposal. The local refs contain only `main` and `origin/main`; no local feature branches or tags demonstrate a partially implemented upgrade.
+[improvements_brief.md](https://github.com/ShuraStoilov98/sensory-alarm-system/blob/cc3a14f/docs/improvements_brief.md) explicitly labels itself a proposal. The local refs contain only `main` and `origin/main`; no local feature branches or tags demonstrate a partially implemented upgrade.
 
 | Improvement | Current evidence |
 | --- | --- |

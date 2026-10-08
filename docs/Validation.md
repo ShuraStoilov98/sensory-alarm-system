@@ -19,7 +19,7 @@ Validated on 8 October 2026 with placeholder WiFi credentials:
 | RAM | 45,084 / 327,680 bytes, 13.8% |
 | Flash | 751,825 / 1,310,720 bytes, 57.4% |
 | Device upload or bench run | Not performed |
-| Hosted GitHub Actions run | Pending push; workflow added, commands verified locally |
+| Hosted GitHub Actions run | Pushed to the new public repository; hosted result not independently verified, commands verified locally |
 
 The platform and framework pins make the selected platform/SDK explicit. They do not certify the security of every SDK component or freeze all Python/upload-tool dependencies. The underlying ESP-IDF 4.4 branch reached end of life in July 2024, according to the [vendor's final 4.4 release notes](https://github.com/espressif/esp-idf/releases/tag/v4.4.8). This pass preserves the PlatformIO Arduino 2.x baseline; migration to a supported SDK remains a separate build/bench task before treating the device as maintained network-connected firmware.
 
@@ -66,17 +66,17 @@ For alarm testing, changing the hour/minute in the source does not clear today's
 
 The daily record is a monotonic calendar date. A clock set incorrectly far into the future can suppress later alarms until that date is reached. Inspect/correct time and the saved record deliberately if this occurs. If a skipped date is awaiting an idle flash write when power fails, that skipped-date record can be lost. Automatic movement always requires a successful write first.
 
-## Human decisions before publication
+## Publication status and remaining human checks
 
 | Decision or task | Current handling |
 | --- | --- |
-| Historical private metadata | Owner authorized removal. A verified history preserves 19 commits, names, dates, messages, source files and model geometry while removing 30 personal email fields and two historical CAD path entries. The sanitized history is installed locally; GitHub still needs the guarded update. |
-| Publish rewritten history | Requires a guarded force push, then clean clones and review any server-side references. GitHub has not been updated by this pass. See [publication steps](Publication.md). |
+| Historical private metadata | Owner authorized removal. A verified history preserves 19 commits, names, dates, messages, source files and model geometry while removing 30 personal email fields and two historical CAD path entries. The cleaned branch and final presentation commit were published to the independent public repository; 20 commits on `main` have no personal email fields or private Windows paths in CAD archives. |
+| Publish rewritten history | Completed: guarded update of the original repository and main-only upload to the independent public repository both succeeded. Old clones and the original repository may still retain historical data outside the published branch. See [publication status](Publication.md). |
 | Contributor attribution and ownership | Confirm original collaborator credit is accurate and public attribution is welcome. Confirm the CAD/assets are yours or shared with permission to publish under the repository license. |
 | Installation media | Supplied photo 1 leads and photo 2 supports the mechanism; the stored layout discloses AI-assisted processing. A six-second CAD video/GIF is provided. Filming an operating demo is outside scope and is not a publication requirement. |
 | Exact hardware and fault behavior | Bench acceptance remains pending and is disclosed. Complete the assembly record and checks before claiming this revision is hardware-validated; confirm the five-second timeout suits the installed travel. Faults require inspection and restart; manual control is hold-to-run, as selected by the owner. |
 | Legacy SDK | Decide whether to publish as a documented legacy prototype or migrate to an Arduino/ESP-IDF stack with current support. The existing compile-tested PlatformIO environment still uses ESP-IDF 4.4.7; pinning alone does not resolve SDK vulnerabilities. |
-| GitHub publication | Review server-side branches/tags, issues, PRs, Actions logs/artifacts and releases for old private material. Push the reviewed changes, confirm CI, then change visibility if the repository is still private. Visibility has not been changed here. |
+| GitHub publication | The owner created the new repository as public and uploaded only cleaned `main`. Confirm hosted CI and the rendered README; keep the original private and avoid copying old branches, artifacts or releases into the new repository. |
 | Portfolio placement | Add a concise repository description/topics, pin the project if desired, and use the installation layout and CAD animation. Describe the device as a personal prototype until physical acceptance is recorded. |
 
 See the [public-readiness report](public_readiness_report.md) for the original review and the status of its findings.
