@@ -1,7 +1,7 @@
 Wiring illustration regeneration
 
 Tool: built-in imagegen.
-Style reference: docs/Wiring_diagram.png at original commit 1294ec4.
+Style reference: docs/Wiring_diagram.png at original commit cc3a14f.
 Electrical reference: docs/Electrical.md and src/esp32/config.h.
 The illustration defines logical nets. Component renders do not specify physical pin positions.
 Intermediate generated drafts were visually checked and corrected before selecting the final image.

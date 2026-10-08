@@ -1,0 +1,19 @@
+Installation image selection and processing
+
+Selected: supplied screenshot 1 (controller close-up) and screenshot 2 (curtain mechanism).
+Omitted: screenshots 3 and 4; darker duplicate controller views.
+The supplied attachments were visible in chat but were not available as local image files.
+The repository asset is a generated, photo-based contact sheet, not an untouched export of the original screenshots.
+Tool: built-in imagegen. The original hardware appearance was used as a strict visual reference.
+This image is presentation material, not an authoritative wiring reference or evidence of the revised firmware running.
+No real operating video is required for this portfolio release.
+
+Final prompt:
+
+Use case: compositing
+Asset type: GitHub README contact sheet based on owner-supplied real installation screenshots.
+Inputs: image 1 is the bright close-up of the real ESP32 controller mounted on a pale textured wall. Image 2 is the real dark vertical close-up of the printed curtain mechanism at its black rail. Images 3 and 4 are redundant alternate controller views and must NOT be used.
+Make a tasteful plain-white two-photo layout using ONLY the first and second supplied photographs, controller first and larger on the left, original narrow mechanism photograph on the right. Preserve every pictured hardware component, wire, mounting part, red button, metal toggle switch, ESP32, purple driver and red breadboard exactly as in the source shots. Keep source photographs' original angle, framing, aspect ratio, background, lighting and exposure. Copy photo contents faithfully. No new camera view, new hardware, new wires, cosmetic rewiring, background replacement, cleaned-up installation, enhanced hidden detail or fake motion. Do not invent a better mechanism from the blurry photograph. Keep the uneven exposed prototype wiring: this is evidence of the original build.
+Only add whitespace, a fine neutral border and crisp captions BELOW the photographs: "Controller installation" and "Printed mechanism at curtain rail".
+Add a small footer exactly "Based on owner-supplied installation photos · AI-assisted layout".
+No other text, branding or claims of hardware validation. The final must look like a modest contact sheet, not an idealized product render.

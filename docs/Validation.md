@@ -70,13 +70,13 @@ The daily record is a monotonic calendar date. A clock set incorrectly far into 
 
 | Decision or task | Current handling |
 | --- | --- |
-| Original commit email and CAD paths | Current CAD paths removed; historical copies and personal email preserved. Decide whether this attribution/exposure is acceptable. Changing future Git email settings does not anonymize old commits. |
-| Any history anonymization | Requires a separate, coordinated history rewrite. No rewrite or force push has been performed. Preserve contributor credit if removing private metadata. |
+| Historical private metadata | Owner authorized removal. A verified history preserves 19 commits, names, dates, messages, source files and model geometry while removing 30 personal email fields and two historical CAD path entries. The sanitized history is installed locally; GitHub still needs the guarded update. |
+| Publish rewritten history | Requires a guarded force push, then clean clones and review any server-side references. GitHub has not been updated by this pass. See [publication steps](Publication.md). |
 | Contributor attribution and ownership | Confirm original collaborator credit is accurate and public attribution is welcome. Confirm the CAD/assets are yours or shared with permission to publish under the repository license. |
-| Real installation media | Add a photo and short working demo with permission; inspect room details, screens and photo metadata before committing. CAD previews do not replace operating evidence. |
-| Exact hardware and fault behavior | Complete the assembly record and bench checks; confirm the five-second timeout suits the installed travel. Faults require inspection and restart; manual control is hold-to-run, as selected by the owner. |
+| Installation media | Supplied photo 1 leads and photo 2 supports the mechanism; the stored layout discloses AI-assisted processing. A six-second CAD video/GIF is provided. Filming an operating demo is outside scope and is not a publication requirement. |
+| Exact hardware and fault behavior | Bench acceptance remains pending and is disclosed. Complete the assembly record and checks before claiming this revision is hardware-validated; confirm the five-second timeout suits the installed travel. Faults require inspection and restart; manual control is hold-to-run, as selected by the owner. |
 | Legacy SDK | Decide whether to publish as a documented legacy prototype or migrate to an Arduino/ESP-IDF stack with current support. The existing compile-tested PlatformIO environment still uses ESP-IDF 4.4.7; pinning alone does not resolve SDK vulnerabilities. |
 | GitHub publication | Review server-side branches/tags, issues, PRs, Actions logs/artifacts and releases for old private material. Push the reviewed changes, confirm CI, then change visibility if the repository is still private. Visibility has not been changed here. |
-| Portfolio placement | Add a concise repository description/topics, pin the project if desired, and link the actual demo. Describe the device as a personal prototype until physical acceptance is recorded. |
+| Portfolio placement | Add a concise repository description/topics, pin the project if desired, and use the installation layout and CAD animation. Describe the device as a personal prototype until physical acceptance is recorded. |
 
 See the [public-readiness report](public_readiness_report.md) for the original review and the status of its findings.

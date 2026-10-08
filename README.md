@@ -2,9 +2,9 @@
 
 An ESP32 alarm that opens bedroom curtains with a stepper motor and a printed mechanism. A physical direction switch and hold-to-run button provide manual control; end stops and a five-second timeout bound each movement.
 
-![ESP32 curtain alarm wiring: switches, DRV8825, motor and separate power supplies](docs/Wiring_diagram.png)
+![Photo-based layout of the original controller installation and printed curtain mechanism](docs/images/installation-layout.png)
 
-*Regenerated wiring illustration. Follow the [connection tables](docs/Electrical.md) and check your carrier labels before assembly.*
+*Based on the owner's installation screenshots; [AI-assisted layout](docs/images/installation-layout.txt). The controller close-up leads, with the curtain mechanism alongside it.*
 
 [Wiring](docs/Electrical.md) · [Printable parts](docs/Mechanical.md) · [Hardware checks](docs/Validation.md) · [Public readiness](docs/public_readiness_report.md)
 
@@ -12,9 +12,15 @@ An ESP32 alarm that opens bedroom curtains with a stepper motor and a printed me
 
 Simona Todorova and Alexander Stoilov built the original version over Christmas weekend in December 2024, using an Arduino Mega2560 for motor control, an ESP32 for WiFi/time, SolidWorks CAD, and a physical curtain installation.
 
-Alexander's subsequent work migrated the firmware to PlatformIO and simplified the electronics to a single ESP32. The October 2026 public-readiness pass added hold-to-run control, cooperative motor stepping, latched faults, reliable offline manual control, daylight-saving rules, and date-based alarm tracking. The original Git history and contributor credit remain intact.
+Alexander's subsequent work migrated the firmware to PlatformIO and simplified the electronics to a single ESP32. The October 2026 public-readiness pass added hold-to-run control, cooperative motor stepping, latched faults, reliable offline manual control, daylight-saving rules, and date-based alarm tracking. Contributor names and original commit dates remain; personal email and CAD source-path metadata have been removed from local historical revisions.
 
-**Status:** personal hardware prototype. The earlier build was reported working; the revised firmware has automated behavior checks and a compile check, but still needs validation on the assembled hardware. A real installation photo and demonstration video are still to be added.
+**Status:** personal hardware prototype. The earlier build was reported working; the revised firmware has automated behavior checks and a compile check, but still needs validation on the assembled hardware. The supplied installation photographs document the earlier assembly. An operating video is outside this release scope; the CAD animation below illustrates the original printable designs.
+
+## Wiring
+
+![ESP32 curtain alarm wiring: switches, DRV8825, motor and separate power supplies](docs/Wiring_diagram.png)
+
+*Regenerated logical wiring illustration. Follow the [connection tables](docs/Electrical.md) and check your actual board labels before assembly.*
 
 ## Printed mechanism
 
@@ -24,6 +30,10 @@ These are previews embedded in the original CAD exports, rather than photographs
 | --- | --- | --- |
 | ![Curtain puller CAD preview](docs/images/curtain-puller.png) | ![ESP32 and driver holder CAD preview](docs/images/controller-holder.png) | ![Button holder CAD preview](docs/images/button-holders.png) |
 | [CurtainPuller_v2.3mf](mechanical%20parts/CurtainPuller_v2.3mf) | [ESP32-DRV-BTNs_Holder.3mf](mechanical%20parts/ESP32-DRV-BTNs_Holder.3mf) | [Button_holders.3MF](mechanical%20parts/Button_holders.3MF) |
+
+![Rotating views of the three original CAD models, explicitly labeled as a CAD render](docs/images/cad-turntable.gif)
+
+[Download the six-second CAD video](docs/images/cad-turntable.mp4). These are rotating views of the actual 3MF geometry, not footage of curtain operation. [Regenerate the render](tools/render_cad.py).
 
 ## How it works
 

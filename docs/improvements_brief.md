@@ -79,4 +79,6 @@ Only persist settings when they change. Keep alarm-attempt tracking independent 
 
 ## Next useful evidence
 
-Complete the [commissioning checks](Validation.md), record the carrier and motor specifications, and add real installation photographs and a demo. These would make the existing prototype easier to evaluate before extending its feature set.
+The supplied controller and mechanism screenshots are now surfaced in the README, with AI-assisted formatting disclosed. A CAD turntable video/GIF uses the original 3MF geometry. Filming an operating demo is outside this release scope.
+
+Complete the [commissioning checks](Validation.md) and record the carrier and motor specifications before claiming the revised firmware is hardware-validated. Those checks can remain pending for a clearly documented prototype source release. See the [remaining publication steps](Publication.md).
